@@ -937,7 +937,7 @@ const PROBLEMS = [
       { args: ['Apple'], expected: 2, label: "count_vowels('Apple')" },
       { args: ['xyz'], expected: 0, label: "count_vowels('xyz')" },
       { args: ['AEIOU'], expected: 5, label: "count_vowels('AEIOU')" },
-      { args: ['Hello, Tycoon!'], expected: 5, label: "count_vowels('Hello, Tycoon!')", hidden: true },
+      { args: ['Hello, Tycoon!'], expected: 4, label: "count_vowels('Hello, Tycoon!')", hidden: true },
     ],
     hints: [
       'You can loop over a string directly: for letter in text:',

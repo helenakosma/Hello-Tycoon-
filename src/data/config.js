@@ -75,8 +75,8 @@ export const PRESTIGE = {
     + 'remember you — every future Byte is worth more.',
 
   /** You must meet BOTH of these before the button unlocks. */
-  requiredLevel: 8,
-  requiredProblemsSolved: 20,
+  requiredLevel: 5,
+  requiredProblemsSolved: 18,
 
   /**
    * Reputation earned = floor( sqrt(lifetimeBytes / reputationDivisor) ).
