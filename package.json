@@ -1,0 +1,22 @@
+{
+  "name": "hello-tycoon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hello, Tycoon! — an educational coding game where students earn currency by solving Java or Python problems and spend it building a tech startup tower.",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build && node scripts/postbuild.mjs",
+    "preview": "vite preview",
+    "test": "node scripts/selftest.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11"
+  }
+}
