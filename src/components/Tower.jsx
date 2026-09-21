@@ -1,24 +1,24 @@
 /**
  * The tower: a cutaway view of the office, floor by floor.
  *
- * STRUCTURE (this is the hierarchy real pixel art will slot into):
+ * STRUCTURE:
  *   .tower-scroll
- *     └ .floor          one storey — a labelled coloured rectangle
- *         └ .room       the interior
+ *     └ .floor          one storey, painted with the room's pixel art
+ *         └ .room       the strip of floor the furniture stands on
  *             └ .item-slot × n   one per upgrade line
- *                 └ <Sprite>     coloured box today, PNG later
+ *                 └ <Sprite>     the furniture sprite
  *
- * Nothing here knows whether a sprite is a picture or a box — that decision
- * lives entirely in Sprite.jsx / assets.js.
+ * Nothing here knows whether a sprite is a picture or a fallback colour box —
+ * that decision lives entirely in Sprite.jsx / assets.js.
  */
 
 import React, { useEffect, useRef } from 'react';
 import Sprite from './Sprite.jsx';
+import Icon from './Icon.jsx';
 import ITEMS from '../data/items.js';
 import { roomsById } from '../data/rooms.js';
-import { CURRENCY } from '../data/config.js';
 import {
-  formatNumber, floorBuildStatus, solvedCount, reputationMultiplier, totalBonuses,
+  formatNumber, floorBuildStatus, reputationMultiplier, totalBonuses,
 } from '../state/selectors.js';
 
 /** Flat Bytes/sec this one floor contributes, for the little green label. */
@@ -35,7 +35,13 @@ function floorIncome(floor, state) {
   return flat * (1 + bonuses.passiveMult) * reputationMultiplier(state);
 }
 
-/** One item inside a room. Flashes when its tier goes up. */
+/**
+ * One piece of furniture standing in a room.
+ *
+ * In the tower it is just the sprite — no text — so the floor reads as a
+ * little scene rather than a list. The names and tiers live in the shop panel
+ * underneath, where you actually need them. Hovering still names it.
+ */
 function ItemSlot({ line, tier, ownedTier }) {
   const slotRef = useRef(null);
   const previousTier = useRef(ownedTier);
@@ -54,19 +60,22 @@ function ItemSlot({ line, tier, ownedTier }) {
   const maxed = ownedTier >= line.tiers.length;
 
   return (
-    <span className={`item-slot${maxed ? ' is-max' : ''}`} ref={slotRef} title={`${line.name}: ${tier.name}`}>
+    <span
+      className={`item-slot${maxed ? ' is-max' : ''}`}
+      ref={slotRef}
+      title={`${line.name}: ${tier.name}${maxed ? ' (fully upgraded)' : ''}`}
+    >
       <Sprite
         spriteKey={`${line.sprite}.t${ownedTier}`}
         placeholder={tier.placeholder}
         label={tier.name}
+        className="item-sprite"
       />
-      <span>{tier.name}</span>
-      <span className="tier-badge">{maxed ? 'MAX' : `T${ownedTier}`}</span>
     </span>
   );
 }
 
-/** One storey. */
+/** One storey: a room backdrop with furniture standing on its floor. */
 function Floor({ floor, index, isSelected, onSelect, state }) {
   const room = roomsById[floor.roomType];
   const lines = ITEMS[floor.roomType] || [];
@@ -75,26 +84,31 @@ function Floor({ floor, index, isSelected, onSelect, state }) {
   return (
     <div
       className={`floor${isSelected ? ' is-selected' : ''}`}
-      style={{ background: room.placeholder.bg, borderColor: room.placeholder.accent }}
+      style={{ borderColor: room.placeholder.accent, background: room.placeholder.bg }}
       onClick={() => onSelect(index)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(index); } }}
       role="button"
       tabIndex={0}
       aria-pressed={isSelected}
+      aria-label={`Floor ${floor.level}, ${floor.name || room.name}`}
     >
-      {/* Temporary decoration; a real room sprite will cover this area. */}
-      <span className="floor-glyph" aria-hidden="true">{room.placeholder.glyph}</span>
+      {/* The room interior. Falls back to a flat colour if the art is missing. */}
+      <Sprite
+        spriteKey={room.sprite}
+        placeholder={{ color: room.placeholder.bg, glyph: room.placeholder.glyph }}
+        label={room.name}
+        className="floor-bg"
+      />
 
       <div className="floor-head">
         <span className="floor-number">{String(floor.level).padStart(2, '0')}</span>
-        <span className="floor-name" style={{ color: room.placeholder.accent }}>
-          {floor.name || room.name}
-        </span>
+        <span className="floor-name">{floor.name || room.name}</span>
         {income > 0 && (
           <span className="floor-income">+{formatNumber(income)}/s</span>
         )}
       </div>
 
+      {/* Furniture stands on the floor line drawn in the room art. */}
       <div className="room">
         {lines.map((line) => {
           const owned = floor.items?.[line.id] ?? 1;
@@ -120,25 +134,29 @@ export default function Tower({ state, dispatch, onBuild }) {
     <div className="card tower-card">
       <div className="card-head">
         <span className="card-title">Your Tower</span>
-        <span className="dim mono" style={{ fontSize: 12 }}>
-          {floorCount} floor{floorCount === 1 ? '' : 's'} · {solvedCount(state)} solved
+        <span className="dim" style={{ fontSize: 12.5 }}>
+          {floorCount} floor{floorCount === 1 ? '' : 's'}
         </span>
       </div>
 
       <div className="tower-scroll" ref={scrollRef}>
-        <div className="sky">— rooftop —</div>
+        {/* The roof cap and sign, so the tower has a top rather than just stopping. */}
+        <div className="roof" aria-hidden="true">
+          <div className="roof-sign">BITWISE INC</div>
+          <div className="roof-slab" />
+        </div>
 
         {/* The next floor, shown as a dashed outline so the goal is visible. */}
         {build.def && (
           <div className="floor-ghost">
-            <strong>Floor {build.def.level}: {build.def.name || roomsById[build.def.roomType].name}</strong>
-            <span className="mono" style={{ color: 'var(--gold)' }}>
-              {formatNumber(build.def.cost)} {CURRENCY.symbol}
+            <strong>Next: {build.def.name || roomsById[build.def.roomType].name}</strong>
+            <span style={{ color: 'var(--gold)', fontWeight: 700 }}>
+              <Icon name="coin" size={13} /> {formatNumber(build.def.cost)}
             </span>
-            <span className="dim"> · needs {build.def.requiresProblems} solved</span>
+            <span className="dim"> · <Icon name="check" size={12} /> {build.def.requiresProblems}</span>
             <div className="why">
               {build.canBuild
-                ? <button className="btn btn-primary" onClick={onBuild}>Build this floor</button>
+                ? <button className="btn btn-primary" onClick={onBuild}>Build it</button>
                 : build.reason}
             </div>
           </div>
@@ -158,6 +176,9 @@ export default function Tower({ state, dispatch, onBuild }) {
             />
           );
         })}
+
+        {/* The pavement the tower stands on. */}
+        <div className="tower-ground" aria-hidden="true" />
       </div>
     </div>
   );

@@ -54,6 +54,13 @@ To check that every problem still works after you edit them:
 npm test
 ```
 
+To redraw the starter pixel art from scratch (this **overwrites** everything in
+`public/assets/`, so don't run it after hand-editing the sprites):
+
+```bash
+npm run art
+```
+
 ---
 
 ## What you actually do in the game
@@ -122,7 +129,8 @@ Quick map:
 | `src/data/rooms.js` | room types |
 | `src/data/items.js` | furniture upgrade lines and their bonuses |
 | `src/data/config.js` | prices, XP curve, prestige, sound |
-| `src/data/assets.js` | where pixel art goes when you have some |
+| `src/data/assets.js` | how sprite names map to image files |
+| `public/assets/` | the pixel art itself — ordinary PNGs you can repaint |
 
 Run `npm test` after editing problems — it checks that every problem is
 well-formed, that a correct solution really does pass, and that the starter

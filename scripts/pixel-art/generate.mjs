@@ -21,15 +21,18 @@ import ITEMS from '../../src/data/items.js';
 import { Canvas } from './canvas.mjs';
 import { drawRoom } from './rooms.mjs';
 import { drawItem } from './items.mjs';
+import { drawUi, UI_KEYS } from './ui.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const assetsDir = join(here, '..', '..', 'public', 'assets');
 
-const ROOM_SCALE = 2;   // 160x48 -> 320x96
-const ITEM_SCALE = 2;   // 16x16  -> 32x32
+const ROOM_SCALE = 3;   // 160x36 -> 480x108
+const ITEM_SCALE = 3;   // 16x16  -> 48x48
+const UI_SCALE = 2;     // 12x12  -> 24x24
 
 mkdirSync(join(assetsDir, 'rooms'), { recursive: true });
 mkdirSync(join(assetsDir, 'items'), { recursive: true });
+mkdirSync(join(assetsDir, 'ui'), { recursive: true });
 
 let written = 0;
 const missing = [];
@@ -76,6 +79,13 @@ for (const [roomType, lines] of Object.entries(ITEMS)) {
       written++;
     });
   }
+}
+
+// --- ui icons --------------------------------------------------------------
+
+for (const key of UI_KEYS) {
+  writeFileSync(join(assetsDir, 'ui', `${key}.png`), drawUi(key).scale(UI_SCALE).toPng());
+  written++;
 }
 
 console.log(`\nWrote ${written} sprites into public/assets/`);

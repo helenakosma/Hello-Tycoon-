@@ -1,45 +1,36 @@
 /**
- * The persistent stats bar across the top: Bytes, income, solved, level,
- * floors, streak — plus the sound toggle and the help/reset menu.
+ * The HUD across the top.
+ *
+ * Deliberately arranged by importance rather than as a row of equal readouts:
+ * Bytes is the number you care about, so it gets a big gold pill; everything
+ * else is a small chip you can glance at. The uppercase micro-labels that make
+ * dashboards feel like dashboards are gone — the icons say what things are.
  */
 
 import React, { useState } from 'react';
+import Icon from './Icon.jsx';
 import { CURRENCY, FEATURES, PRESTIGE } from '../data/config.js';
 import ROOMS from '../data/rooms.js';
 import ITEMS from '../data/items.js';
-import { expectedAssetFilenames, ASSET_MODE } from '../data/assets.js';
+import { expectedAssetFilenames } from '../data/assets.js';
 import {
   formatNumber, formatRate, incomePerSecond, levelProgress, solvedCount, streakMultiplier,
 } from '../state/selectors.js';
 
-function Stat({ label, value, className = '', children, title }) {
-  return (
-    <div className={`stat ${className}`} title={title}>
-      <span className="stat-value">{value}</span>
-      <span className="stat-label">{label}</span>
-      {children}
-    </div>
-  );
-}
-
-/** Lists the exact PNG filenames an artist would need to supply. */
+/** Lists the PNG filenames the game looks for, for anyone redrawing the art. */
 function AssetManifest({ onClose }) {
   const rows = expectedAssetFilenames(ROOMS, ITEMS);
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Pixel art filenames</h3>
+        <h3>Where the art lives</h3>
         <p>
-          Drop PNGs into <code>public/assets/</code> with these exact names, then change
-          {' '}<code>ASSET_MODE</code> in <code>src/data/assets.js</code> from
-          {' '}<code>&apos;{ASSET_MODE}&apos;</code> to <code>&apos;auto&apos;</code>.
-          Any file that is missing simply keeps its coloured placeholder, so you can convert
-          one room at a time.
+          Every sprite below is an ordinary PNG in <code>public/assets/</code>. Open one in any
+          pixel editor, paint over it, save, refresh. Delete one and the game falls back to a
+          coloured box, so nothing can break.
         </p>
         <table>
-          <thead>
-            <tr><th>File</th><th>What it is</th></tr>
-          </thead>
+          <thead><tr><th>File</th><th>What it is</th></tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.spriteKey}>
@@ -63,7 +54,6 @@ export default function StatsBar({ state, dispatch, onSwitchLanguage }) {
 
   const progress = levelProgress(state.xp);
   const income = incomePerSecond(state);
-  const streakMult = streakMultiplier(state);
   const otherLanguage = state.language === 'python' ? 'java' : 'python';
   const otherLabel = otherLanguage === 'python' ? 'Python' : 'Java';
   const alreadyUnlocked = state.unlockedLanguages.includes(otherLanguage);
@@ -71,79 +61,69 @@ export default function StatsBar({ state, dispatch, onSwitchLanguage }) {
 
   return (
     <>
-      <div className="statsbar">
-        <div className="brand">Hello, <span>Tycoon!</span></div>
+      <div className="hud">
+        <div className="hud-brand">Hello,<br /><span>Tycoon!</span></div>
 
-        <Stat
-          className="is-money"
-          label={CURRENCY.name}
-          value={`${formatNumber(state.bytes)} ${CURRENCY.symbol}`}
-          title={`${Math.floor(state.bytes).toLocaleString()} ${CURRENCY.name}`}
-        />
-        <Stat
-          className="is-income"
-          label="per sec"
-          value={`+${formatRate(income)}`}
-          title="Passive income from your tower"
-        />
-        <Stat label="solved" value={solvedCount(state)} title="Problems solved (kept through a Series B)" />
-        <Stat label="floors" value={state.floors.length} />
-        <Stat
-          label={progress.maxed ? 'max level' : `${progress.into}/${progress.need} xp`}
-          value={`Lv ${progress.level}`}
-        >
-          <div className="xpbar"><div style={{ width: `${progress.fraction * 100}%` }} /></div>
-        </Stat>
+        {/* The number that matters, front and centre. */}
+        <div className="hud-coins" title={`${Math.floor(state.bytes).toLocaleString()} ${CURRENCY.name}`}>
+          <Icon name="coin" size={26} label={CURRENCY.name} />
+          <div className="hud-coins-text">
+            <b>{formatNumber(state.bytes)}</b>
+            <span><Icon name="bolt" size={11} /> {formatRate(income)}/s</span>
+          </div>
+        </div>
 
-        {state.streak > 0 && (
-          <Stat
-            className="is-streak"
-            label="streak"
-            value={`${state.streak}× (${streakMult.toFixed(2)}×)`}
-            title="Consecutive correct answers. Resets only when an answer is wrong."
-          />
-        )}
-        {state.reputation > 0 && (
-          <Stat
-            className="is-streak"
-            label="reputation"
-            value={state.reputation}
-            title={`${PRESTIGE.name} rounds completed: ${state.prestigeCount}`}
-          />
-        )}
+        {/* Level and the bar towards the next one. */}
+        <div className="hud-level" title={progress.maxed ? 'Max level' : `${progress.into} / ${progress.need} XP`}>
+          <div className="hud-level-badge">{progress.level}</div>
+          <div className="hud-level-body">
+            <span>LEVEL</span>
+            <div className="xpbar"><div style={{ width: `${progress.fraction * 100}%` }} /></div>
+          </div>
+        </div>
 
-        <div className="statsbar-spacer" />
+        <div className="hud-chips">
+          <span className="hud-chip" title="Problems solved">
+            <Icon name="check" size={16} /> {solvedCount(state)}
+          </span>
+          <span className="hud-chip" title="Floors built">
+            <Icon name="floors" size={16} /> {state.floors.length}
+          </span>
+          {state.streak > 0 && (
+            <span className="hud-chip is-hot" title={`${state.streak} correct in a row — rewards ×${streakMultiplier(state).toFixed(2)}`}>
+              <Icon name="spark" size={16} /> {state.streak}×
+            </span>
+          )}
+          {state.reputation > 0 && (
+            <span className="hud-chip is-rep" title={`${PRESTIGE.name} completed: ${state.prestigeCount}`}>
+              <Icon name="trophy" size={16} /> {state.reputation}
+            </span>
+          )}
+        </div>
 
-        {/* Stretch goal: buy your way into the other language. */}
+        <div className="hud-spacer" />
+
         <button
-          className="btn btn-ghost"
+          className="btn btn-small"
           onClick={() => onSwitchLanguage(otherLanguage, switchCost)}
           disabled={!alreadyUnlocked && state.bytes < switchCost}
           title={alreadyUnlocked
-            ? `Switch to ${otherLabel} (already unlocked)`
+            ? `Switch to ${otherLabel}`
             : `Unlock ${otherLabel} for ${formatNumber(switchCost)} ${CURRENCY.name}`}
         >
-          {alreadyUnlocked
-            ? `Switch to ${otherLabel}`
-            : `Unlock ${otherLabel} · ${formatNumber(switchCost)} ${CURRENCY.symbol}`}
+          {alreadyUnlocked ? otherLabel : <>{otherLabel} <Icon name="coin" size={13} /> {formatNumber(switchCost)}</>}
         </button>
 
         <button
-          className="btn btn-ghost"
+          className="btn btn-icon"
           onClick={() => dispatch({ type: 'SET_SOUND', value: !state.settings.sound })}
           title={state.settings.sound ? 'Sound on' : 'Sound off'}
           aria-label={state.settings.sound ? 'Turn sound off' : 'Turn sound on'}
         >
-          {state.settings.sound ? '♪' : '✕♪'}
+          {state.settings.sound ? '♪' : '♪̸'}
         </button>
-
-        <button className="btn btn-ghost" onClick={() => setShowAssets(true)} title="Pixel art filenames">
-          art
-        </button>
-
-        <button className="btn btn-ghost" onClick={() => setConfirmReset(true)} title="Erase this save and start over">
-          reset
-        </button>
+        <button className="btn btn-icon" onClick={() => setShowAssets(true)} title="Where the art lives">🎨</button>
+        <button className="btn btn-icon" onClick={() => setConfirmReset(true)} title="Start over">↺</button>
       </div>
 
       {showAssets && <AssetManifest onClose={() => setShowAssets(false)} />}
@@ -153,14 +133,13 @@ export default function StatsBar({ state, dispatch, onSwitchLanguage }) {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>Start over?</h3>
             <p>
-              This erases everything saved in this browser: your Bytes, your tower, and the
-              record of which problems you have solved. It cannot be undone.
+              This erases your Bytes, your tower, and every problem you have solved on this
+              computer. It cannot be undone.
             </p>
             <div className="row" style={{ justifyContent: 'flex-end', marginTop: 16 }}>
               <button className="btn" onClick={() => setConfirmReset(false)}>Cancel</button>
               <button
-                className="btn"
-                style={{ background: '#f5744d22', borderColor: '#f5744d66', color: 'var(--red)' }}
+                className="btn btn-danger"
                 onClick={() => { dispatch({ type: 'HARD_RESET' }); setConfirmReset(false); }}
               >
                 Erase everything

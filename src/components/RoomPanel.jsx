@@ -7,8 +7,9 @@
 
 import React from 'react';
 import Sprite from './Sprite.jsx';
+import Icon from './Icon.jsx';
 import { roomsById } from '../data/rooms.js';
-import { BONUS_TYPES, CURRENCY, PRESTIGE } from '../data/config.js';
+import { BONUS_TYPES, PRESTIGE } from '../data/config.js';
 import { formatNumber, roomUpgrades, prestigeStatus } from '../state/selectors.js';
 
 export default function RoomPanel({ state, onBuy, onPrestige }) {
@@ -22,14 +23,12 @@ export default function RoomPanel({ state, onBuy, onPrestige }) {
     <div className="card">
       <div className="card-head">
         <span className="card-title" style={{ color: room.placeholder.accent }}>
-          Floor {floor.level} · {floor.name || room.name}
+          {floor.name || room.name}
         </span>
-        <span className="dim" style={{ fontSize: 12 }}>click a floor above to switch</span>
+        <span className="dim" style={{ fontSize: 12 }}>floor {floor.level}</span>
       </div>
 
       <div className="shop-body">
-        <p className="shop-blurb">{room.blurb}</p>
-
         {upgrades.map(({ line, owned, maxed, currentTier, nextTier, affordable }) => (
           <div className="upgrade-row" key={line.id}>
             <Sprite
@@ -39,31 +38,27 @@ export default function RoomPanel({ state, onBuy, onPrestige }) {
             />
 
             <div className="upgrade-info">
-              <div className="upgrade-name">
-                {line.name}: <span className="muted">{currentTier.name}</span>
-              </div>
+              <div className="upgrade-name">{currentTier.name}</div>
               {maxed ? (
                 <div className="upgrade-maxed">
-                  Fully upgraded · {BONUS_TYPES[currentTier.bonus.type].describe(currentTier.bonus.value)}
+                  Maxed · {BONUS_TYPES[currentTier.bonus.type].describe(currentTier.bonus.value)}
                 </div>
               ) : (
                 <div className="upgrade-next">
-                  Next: {nextTier.name} — <b>{BONUS_TYPES[nextTier.bonus.type].describe(nextTier.bonus.value)}</b>
-                  <span className="dim">
-                    {' '}(replaces {BONUS_TYPES[currentTier.bonus.type].describe(currentTier.bonus.value)})
-                  </span>
+                  → {nextTier.name} · <b>{BONUS_TYPES[nextTier.bonus.type].describe(nextTier.bonus.value)}</b>
                 </div>
               )}
             </div>
 
             {!maxed && (
               <button
-                className="btn btn-buy"
+                className="btn-buy"
                 onClick={() => onBuy(index, line.id)}
                 disabled={!affordable}
                 title={affordable ? `Buy ${nextTier.name}` : 'Not enough Bytes yet'}
               >
-                {formatNumber(nextTier.cost)} {CURRENCY.symbol}
+                <Icon name="coin" size={13} />
+                {formatNumber(nextTier.cost)}
               </button>
             )}
           </div>
@@ -71,26 +66,26 @@ export default function RoomPanel({ state, onBuy, onPrestige }) {
       </div>
 
       {/* --- Series B ------------------------------------------------------ */}
-      <div style={{ padding: '12px 14px', borderTop: '1px solid var(--border)' }}>
+      <div style={{ padding: '11px 14px', borderTop: '2px solid var(--border)' }}>
         <button
-          className="btn btn-prestige"
+          className="btn-prestige"
           onClick={onPrestige}
           disabled={!prestige.available}
           title={prestige.reason || ''}
         >
           {prestige.available
-            ? `Take ${PRESTIGE.name} — +${prestige.gain} Reputation`
+            ? <>{PRESTIGE.name} · <Icon name="trophy" size={14} /> +{prestige.gain}</>
             : PRESTIGE.name}
         </button>
-        <div className="dim" style={{ fontSize: 11.5, marginTop: 7, lineHeight: 1.45 }}>
+        <div className="dim" style={{ fontSize: 12, marginTop: 7, lineHeight: 1.45 }}>
           {prestige.available ? (
             <>
-              Resets your tower to one floor and your Bytes to zero. You keep every problem
-              you have solved, your level, and your Reputation — which would rise to
-              {' '}<b style={{ color: 'var(--purple)' }}>×{prestige.newMultiplier.toFixed(2)}</b> on all future Bytes.
+              Start the tower again from one floor. You keep every problem you have solved and
+              your level, and all future Bytes are worth
+              {' '}<b style={{ color: 'var(--purple)' }}>×{prestige.newMultiplier.toFixed(2)}</b>.
             </>
           ) : (
-            <>{PRESTIGE.flavour} <b>{prestige.reason}</b></>
+            <>{prestige.reason}.</>
           )}
         </div>
       </div>

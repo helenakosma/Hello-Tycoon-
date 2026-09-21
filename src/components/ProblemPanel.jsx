@@ -1,23 +1,37 @@
 /**
- * The problem side: pick a tier, pick a problem, read the prompt, ask for hints.
+ * The problem side: pick a topic, pick a problem, read it, ask for hints.
  *
- * Hints are revealed one at a time and never show the answer — the last hint
- * in each problem is written to be the strongest nudge, not the solution.
+ * Laid out like a quest board rather than a table — big tappable cards, a coin
+ * badge for the reward, stars for difficulty, a tick when it's done.
+ *
+ * Hints are revealed one at a time and never show the answer; the last hint in
+ * each problem is written to be the strongest nudge, not the solution.
  */
 
 import React, { useMemo, useState } from 'react';
 import Markdown from './Markdown.jsx';
+import Icon from './Icon.jsx';
 import TIERS from '../data/tiers.js';
-import { CURRENCY } from '../data/config.js';
-import { formatNumber, rewardFor, tierStatus } from '../state/selectors.js';
+import { rewardFor, tierStatus, formatNumber } from '../state/selectors.js';
 
-/** ★★☆☆☆ for difficulty 2. */
-const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
+/** ★★☆☆☆ drawn with the pixel star sprites. */
+function Stars({ value }) {
+  return (
+    <span className="stars" title={`Difficulty ${value} of 5`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Icon key={n} name={n <= value ? 'star' : 'star_empty'} size={11} />
+      ))}
+    </span>
+  );
+}
 
 export default function ProblemPanel({ state, dispatch, problems, problem, hintsShown, onShowHint }) {
-  const status = useMemo(() => tierStatus(state), [state.xp, state.solvedProblemIds.length]);
-  const firstUnlockedTier = status.find((s) => s.unlocked)?.tier.id ?? TIERS[0].id;
-  const [activeTier, setActiveTier] = useState(problem?.tier ?? firstUnlockedTier);
+  const status = useMemo(
+    () => tierStatus(state),
+    [state.xp, state.solvedProblemIds.length],
+  );
+  const firstUnlocked = status.find((s) => s.unlocked)?.tier.id ?? TIERS[0].id;
+  const [activeTier, setActiveTier] = useState(problem?.tier ?? firstUnlocked);
 
   const tierProblems = problems.filter((p) => p.tier === activeTier);
   const activeStatus = status.find((s) => s.tier.id === activeTier);
@@ -25,33 +39,38 @@ export default function ProblemPanel({ state, dispatch, problems, problem, hints
   return (
     <>
       <div className="card">
-        <div className="picker">
+        <div className="tier-tabs">
           {status.map(({ tier, unlocked, reason }) => {
-            const solvedInTier = problems
-              .filter((p) => p.tier === tier.id && state.solvedProblemIds.includes(p.id)).length;
-            const totalInTier = problems.filter((p) => p.tier === tier.id).length;
+            const solved = problems.filter(
+              (p) => p.tier === tier.id && state.solvedProblemIds.includes(p.id),
+            ).length;
+            const total = problems.filter((p) => p.tier === tier.id).length;
+            const done = solved === total && total > 0;
+            const active = activeTier === tier.id;
             return (
               <button
                 key={tier.id}
-                className={`tier-chip${activeTier === tier.id ? ' is-active' : ''}`}
+                className={`tier-tab${active ? ' is-active' : ''}${unlocked ? '' : ' is-locked'}`}
                 onClick={() => setActiveTier(tier.id)}
                 disabled={!unlocked}
                 title={unlocked ? tier.blurb : reason}
-                style={activeTier === tier.id ? { borderColor: tier.colour } : undefined}
+                style={active ? { '--tab': tier.colour } : { '--tab': tier.colour }}
               >
-                {unlocked ? '' : '🔒 '}{tier.name}
-                <span className="dim"> {solvedInTier}/{totalInTier}</span>
+                {!unlocked && <Icon name="lock" size={13} />}
+                {done && <Icon name="check" size={13} />}
+                <span>{tier.name}</span>
+                <b>{solved}/{total}</b>
               </button>
             );
           })}
         </div>
 
         {activeStatus && !activeStatus.unlocked ? (
-          <div style={{ padding: 16 }} className="muted">
-            <strong>{activeStatus.tier.name}</strong> is locked. {activeStatus.reason}.
-            <div className="dim" style={{ marginTop: 6, fontSize: 12.5 }}>
-              Both conditions exist on purpose: solving problems raises your level, and your
-              level is what opens the next topic.
+          <div className="locked-note">
+            <Icon name="lock" size={22} />
+            <div>
+              <strong>{activeStatus.tier.name}</strong> is locked.
+              <div className="dim">{activeStatus.reason}.</div>
             </div>
           </div>
         ) : (
@@ -62,17 +81,17 @@ export default function ProblemPanel({ state, dispatch, problems, problem, hints
               return (
                 <button
                   key={p.id}
-                  className={`problem-row${problem?.id === p.id ? ' is-active' : ''}`}
+                  className={`quest${problem?.id === p.id ? ' is-active' : ''}${solved ? ' is-done' : ''}`}
                   onClick={() => dispatch({ type: 'SELECT_PROBLEM', problemId: p.id })}
                 >
-                  <span className="tick">{solved ? '✓' : ''}</span>
-                  <span className="title">
-                    {p.title}
-                    <span className="difficulty"> {stars(p.difficulty)}</span>
+                  <span className="quest-tick">{solved && <Icon name="check" size={16} />}</span>
+                  <span className="quest-body">
+                    <span className="quest-title">{p.title}</span>
+                    <Stars value={p.difficulty} />
                   </span>
-                  <span className="pay">
-                    {solved ? <span className="dim">practice</span>
-                      : `+${formatNumber(pay.total)} ${CURRENCY.symbol}`}
+                  <span className={`quest-pay${solved ? ' is-done' : ''}`}>
+                    <Icon name="coin" size={14} />
+                    {solved ? '¼' : formatNumber(pay.total)}
                   </span>
                 </button>
               );
@@ -82,16 +101,16 @@ export default function ProblemPanel({ state, dispatch, problems, problem, hints
       </div>
 
       {problem && (
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: '0 1 auto', maxHeight: '32vh' }}>
+        <div className="card prompt-card">
           <div className="card-head">
             <span className="card-title">{problem.title}</span>
             <span className="row">
-              <span className="difficulty">{stars(problem.difficulty)}</span>
-              <span className="mono" style={{ color: 'var(--gold)', fontSize: 12 }}>
-                +{formatNumber(rewardFor(state, problem).total)} {CURRENCY.symbol}
+              <Stars value={problem.difficulty} />
+              <span className="reward-pill">
+                <Icon name="coin" size={13} /> {formatNumber(rewardFor(state, problem).total)}
               </span>
               <button
-                className="btn btn-ghost"
+                className="btn btn-small"
                 onClick={onShowHint}
                 disabled={hintsShown >= problem.hints.length}
               >

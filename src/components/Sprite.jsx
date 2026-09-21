@@ -15,8 +15,9 @@ import { probeSprite, spritePath } from '../data/assets.js';
  * @param {object} placeholder  { color, glyph } from the item/room data
  * @param {string} label        accessible name / tooltip
  * @param {string} className    extra classes, e.g. "room-sprite"
+ * @param {object} style        inline overrides, mainly for icon sizing
  */
-export default function Sprite({ spriteKey, placeholder = {}, label = '', className = '' }) {
+export default function Sprite({ spriteKey, placeholder = {}, label = '', className = '', style }) {
   // probeSprite returns a boolean when it already knows, or a Promise.
   const [hasImage, setHasImage] = useState(() => {
     const answer = probeSprite(spriteKey);
@@ -36,7 +37,7 @@ export default function Sprite({ spriteKey, placeholder = {}, label = '', classN
 
   if (hasImage) {
     return (
-      <span className={`sprite ${className}`} title={label}>
+      <span className={`sprite ${className}`} title={label} style={style}>
         <img src={spritePath(spriteKey)} alt={label} />
       </span>
     );
@@ -46,7 +47,7 @@ export default function Sprite({ spriteKey, placeholder = {}, label = '', classN
     <span
       className={`sprite ${className}`}
       title={label}
-      style={{ background: placeholder.color || '#4a5566' }}
+      style={{ background: placeholder.color || '#4a5566', ...style }}
       aria-label={label}
       role="img"
     >

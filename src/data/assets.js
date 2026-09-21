@@ -1,34 +1,42 @@
 /**
  * ============================================================================
- * SPRITE / ASSET REGISTRY  —  how to swap placeholders for real pixel art
+ * SPRITE / ASSET REGISTRY  —  where the pixel art comes from
  * ============================================================================
  *
- * Right now every room and item draws as a coloured box. Nothing in the game
- * logic knows that. Each room and item in rooms.js / items.js carries a
- * `sprite` key such as "room.bullpen" or "item.chair.t2", and this file is the
- * only place that turns a sprite key into an image path.
+ * Every room and item in rooms.js / items.js carries a `sprite` key such as
+ * "room.bullpen" or "item.chair.t2", and this file is the ONLY place that turns
+ * a sprite key into an image path. Nothing in the game logic knows or cares
+ * whether a sprite is a picture or a coloured box.
  *
  * ----------------------------------------------------------------------------
- * TO DROP IN REAL ART LATER (no code changes needed):
- *   1. Put your PNG files in  public/assets/rooms/  and  public/assets/items/
- *      using the exact filenames listed by the manifest (see below).
- *   2. Change ASSET_MODE from 'placeholder' to 'auto'.
- *   3. Refresh. Any sprite with a matching file shows the art; anything still
- *      missing keeps its coloured placeholder, so you can convert art
- *      one room at a time.
+ * THE ART LIVES IN  public/assets/rooms/  AND  public/assets/items/
  *
- * To see the exact list of filenames the game is looking for, open the game,
- * press the "?" button in the stats bar, and choose "Asset filenames" — or
- * call expectedAssetFilenames() from this module.
+ * To change a sprite: open the PNG in any pixel editor (Aseprite, Piskel,
+ * Paint), draw over it, save. Refresh the game. That's the whole workflow —
+ * no code, no rebuild.
+ *
+ * To add a sprite for something new: name the file to match the rule below and
+ * drop it in. Anything without a file falls back to a coloured box, so you can
+ * add art one piece at a time and the game never breaks.
+ *
+ * The starter art was drawn by scripts/pixel-art/ and can be regenerated with
+ * `npm run art` — but that OVERWRITES everything in public/assets, so don't
+ * run it after you've hand-edited the sprites.
+ *
+ * To see every filename the game looks for, click the "art" button in the
+ * game's top bar.
  * ----------------------------------------------------------------------------
  */
 
 /**
- * 'placeholder' — always draw coloured boxes (the default while you build).
- * 'auto'        — try to load the image; fall back to the box if it's missing.
+ * 'auto'        — use the image if it exists, fall back to a coloured box if
+ *                 not. This is the default: it means you can replace the art
+ *                 one sprite at a time and the game never breaks.
+ * 'placeholder' — ignore the art entirely and draw coloured boxes. Handy if
+ *                 you want to sketch out new rooms before drawing them.
  * 'images'      — always use images (a missing file shows a broken sprite).
  */
-export const ASSET_MODE = 'placeholder';
+export const ASSET_MODE = 'auto';
 
 /** Where art lives, relative to index.html so it also works from file://. */
 const ASSET_ROOT = './assets';
@@ -128,7 +136,7 @@ export function expectedAssetFilenames(rooms, itemsByRoom) {
  * crisp sprites look correct — don't feel tied to these exact numbers.
  */
 export const SPRITE_SIZES = {
-  room: { width: 320, height: 96, note: 'Wide cutaway room interior, Tiny Tower style.' },
-  item: { width: 32, height: 32, note: 'Single object icon, transparent background.' },
+  room: { width: 480, height: 108, note: 'Wide cutaway room interior, Tiny Tower style (a 160x36 drawing at 3x).' },
+  item: { width: 48, height: 48, note: 'Single object icon, transparent background (a 16x16 drawing at 3x).' },
   ui: { width: 16, height: 16, note: 'Small UI glyph (coin, star).' },
 };

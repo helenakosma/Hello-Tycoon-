@@ -206,39 +206,58 @@ The UI says so on every upgrade.
 
 ---
 
-## 6. Dropping in real pixel art
+## 6. Changing the pixel art
 
-The game currently draws every room and item as a coloured box. Nothing in the
-game logic knows that — each room and item carries a `sprite` key, and
-`src/data/assets.js` is the only file that turns a key into an image path.
+Every room and every piece of furniture is an ordinary PNG in
+`public/assets/`. There is no sprite sheet, no atlas, no build step.
 
-**To switch to real art:**
+**To change a sprite:** open the PNG in any pixel editor — Aseprite, Piskel,
+Photoshop, even Paint — draw over it, save, refresh the game. That's it.
 
-1. Save your PNGs into `public/assets/rooms/` and `public/assets/items/`.
-2. Change `ASSET_MODE` in `src/data/assets.js` from `'placeholder'` to `'auto'`.
-3. Refresh.
+**To see what every file is**, click the **🎨 button** in the game's top bar.
+It lists every sprite, its filename and what it is, generated from your current
+rooms and items — so if you add content, the list updates itself.
 
-In `'auto'` mode each sprite is looked up once: if the file exists you get the
-art, and if it doesn't you keep the coloured box. **So you can convert one room
-at a time** — there is no all-or-nothing switch.
+The filenames follow one rule:
 
-**To see the exact filenames the game is looking for**, open the game and click
-the **`art`** button in the top bar. It lists every file and what it is, built
-from your current rooms and items — so if you add content, the list updates
-itself.
-
-The naming rule is mechanical:
-
-| Sprite key | File |
+| Sprite key (in the data files) | File |
 |---|---|
 | `room.bullpen` | `public/assets/rooms/bullpen.png` |
 | `item.chair.t2` | `public/assets/items/chair_t2.png` |
+| `ui.coin` | `public/assets/ui/coin.png` |
 
-Suggested sizes are in `SPRITE_SIZES` in `assets.js` (rooms ≈ 320×96, items ≈
-32×32, transparent background). Images are scaled with
-`image-rendering: pixelated`, so small crisp sprites stay sharp.
+Sizes, if you're drawing from scratch:
 
----
+| What | Size | Notes |
+|---|---|---|
+| Room | 480 × 108 | A wide cutaway interior. Draw the floor line about 78% down; the game stands furniture on it. |
+| Furniture | 48 × 48 | Transparent background, object sitting on the bottom edge. |
+| UI icon | 24 × 24 | Transparent background. |
+
+Everything is scaled with `image-rendering: pixelated`, so small crisp sprites
+stay sharp — don't feel you have to work at these exact sizes, just keep the
+proportions.
+
+**Delete a file and the game falls back to a coloured box** with the item's
+placeholder colour. Nothing breaks, so you can redraw one room at a time. If
+you'd rather work with the boxes for a while, set `ASSET_MODE` in
+`src/data/assets.js` to `'placeholder'` and the art is ignored entirely.
+
+### Regenerating the starter art
+
+The art that ships with the game was drawn in code, in
+`scripts/pixel-art/`. `npm run art` redraws all of it.
+
+That is useful in exactly one situation: you added a new room type or a new
+upgrade tier and want a placeholder sprite for it immediately. Any tier without
+a drawing gets a plain coloured chip, and the script tells you which ones.
+
+**`npm run art` overwrites every file in `public/assets/`.** Once you start
+hand-editing sprites, stop running it, or keep your edits somewhere else first.
+
+If you'd rather extend the generated art than replace it,
+`scripts/pixel-art/rooms.mjs`, `items.mjs` and `ui.mjs` are small files of
+drawing commands (`rect`, `frame`, `px`) with one function per sprite.
 
 ## 7. How the code runs students' code
 
