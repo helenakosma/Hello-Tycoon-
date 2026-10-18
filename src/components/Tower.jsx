@@ -26,7 +26,8 @@ function floorIncome(floor, state) {
   const lines = ITEMS[floor.roomType] || [];
   let flat = 0;
   for (const line of lines) {
-    const owned = floor.items?.[line.id] ?? 1;
+    const owned = floor.items?.[line.id] ?? 0;
+    if (owned < 1) continue;
     const tier = line.tiers[Math.min(owned, line.tiers.length) - 1];
     if (tier?.bonus.type === 'bytesPerSec') flat += tier.bonus.value;
   }
@@ -111,7 +112,8 @@ function Floor({ floor, index, isSelected, onSelect, state }) {
       {/* Furniture stands on the floor line drawn in the room art. */}
       <div className="room">
         {lines.map((line) => {
-          const owned = floor.items?.[line.id] ?? 1;
+          const owned = floor.items?.[line.id] ?? 0;
+          if (owned < 1) return null;      // not bought yet, so nothing stands here
           const tier = line.tiers[Math.min(owned, line.tiers.length) - 1];
           return <ItemSlot key={line.id} line={line} tier={tier} ownedTier={owned} />;
         })}

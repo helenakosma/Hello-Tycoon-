@@ -144,6 +144,7 @@ All in `src/data/config.js`.
 
 | Want to… | Change |
 |---|---|
+| put the whole class on the same problem order | `SHUFFLE_PROBLEMS` to `false` |
 | make the whole game more generous | `ECONOMY.globalRewardMultiplier` |
 | make streaks matter more or less | `ECONOMY.streakStepBonus` |
 | level up faster | lower `PROGRESSION.xpCurve` or raise `xpPerDifficulty` |
@@ -164,6 +165,13 @@ Levels come only from solving problems, so a student who hoards Bytes still
 faces harder content, and a student who idles still can't build upward. If you
 want a pure sandbox, set the `requiresProblems` values to 0.
 
+**Problem order** is shuffled per save, within each topic only. Two students
+sitting together get different running orders, but the topic ladder and the
+difficulty ramp between topics are untouched and every problem is still seen
+exactly once. The shuffle is seeded from a number stored in the save, so a
+student's own order never changes under them. Set `SHUFFLE_PROBLEMS` to
+`false` in `config.js` if you want everyone on the same problem at once.
+
 **Prestige** ("Series B Funding") resets Bytes and the tower but deliberately
 **keeps** solved problems, XP and level. A student never has to re-solve work
 they already did.
@@ -179,9 +187,15 @@ floor can only be built once the one below exists. You can reuse a `roomType`
 **A new room type:** add it to `rooms.js` with an `id`, then give it upgrade
 lines in `items.js` under that same id, then add a floor that uses it.
 
-**A new upgrade line:** add it to the room's list in `items.js`. Tier 1 must
-cost `0` — it comes free with the room so a new floor looks furnished — and each
-tier after that must cost more than the one before. `npm test` enforces both.
+**A new upgrade line:** add it to the room's list in `items.js`. Every tier
+costs Bytes, including tier 1, and each tier must cost more than the one
+before. `npm test` enforces both.
+
+**Floors start empty.** A newly built floor has no machines at all: the room
+view shows one dashed plot per upgrade line, each with its price, and the
+student buys them one at a time. The exception is floor 1, which names
+`starterItems: ['computers']` in `floors.js` so the game doesn't open on a bare
+room. Add `starterItems` to any floor to give it a free machine.
 
 The five bonus types:
 
@@ -223,16 +237,23 @@ The filenames follow one rule:
 | Sprite key (in the data files) | File |
 |---|---|
 | `room.bullpen` | `public/assets/rooms/bullpen.png` |
+| `roomtop.bullpen` | `public/assets/rooms/bullpen_top.png` |
 | `item.chair.t2` | `public/assets/items/chair_t2.png` |
+| `itemtop.chair.t2` | `public/assets/items/chair_t2_top.png` |
 | `ui.coin` | `public/assets/ui/coin.png` |
 
 Sizes, if you're drawing from scratch:
 
 | What | Size | Notes |
 |---|---|---|
-| Room | 480 × 108 | A wide cutaway interior. Draw the floor line about 78% down; the game stands furniture on it. |
-| Furniture | 48 × 48 | Transparent background, object sitting on the bottom edge. |
+| Room (side) | 480 × 108 | The cutaway interior in the tower. Draw the floor line about 78% down; furniture stands on it. |
+| Room (top-down) | 480 × 216 | The same room from above, for the room view. Walls round the edge, floor in the middle. |
+| Furniture (side) | 48 × 48 | Transparent background, object sitting on the bottom edge. |
+| Furniture (top-down) | 48 × 48 | The same machine seen from above, for its plot in the room view. |
 | UI icon | 24 × 24 | Transparent background. |
+
+Every room and machine therefore has **two** sprites — one for the tower and
+one for the room view:
 
 Everything is scaled with `image-rendering: pixelated`, so small crisp sprites
 stay sharp — don't feel you have to work at these exact sizes, just keep the
@@ -255,9 +276,11 @@ a drawing gets a plain coloured chip, and the script tells you which ones.
 **`npm run art` overwrites every file in `public/assets/`.** Once you start
 hand-editing sprites, stop running it, or keep your edits somewhere else first.
 
-If you'd rather extend the generated art than replace it,
-`scripts/pixel-art/rooms.mjs`, `items.mjs` and `ui.mjs` are small files of
-drawing commands (`rect`, `frame`, `px`) with one function per sprite.
+If you'd rather extend the generated art than replace it, the files in
+`scripts/pixel-art/` are small lists of drawing commands (`rect`, `frame`,
+`px`) with one function per sprite: `rooms.mjs` and `items.mjs` for the tower,
+`rooms-top.mjs` and `items-top.mjs` for the room view, and `ui.mjs` for the
+HUD icons.
 
 ## 7. How the code runs students' code
 
@@ -290,6 +313,20 @@ If a problem you write needs a library method the interpreter doesn't have, add
 it to the tables in `src/engine/java/runtime.js` — each one is a small function
 from `(receiver, args)` to a value. `npm test` will tell you if you break
 something.
+
+---
+
+## 7a. Screen size
+
+The code editor takes whatever height the other panels don't need, and the
+panels now scale with the window rather than sitting at fixed pixel sizes, so
+a 768px-tall laptop gets a usable editor. Students can also fold away the
+problem list and the question with the ▴ chevrons in their corners, which
+roughly doubles the editor. Those choices are remembered in the save.
+
+If you want even more editor by default on classroom machines, the numbers are
+at the top of section 4 in `src/styles/global.css`: `.problem-list`,
+`.prompt-card` and `.editor-card` each use a `clamp(min, preferred, max)`.
 
 ---
 

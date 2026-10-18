@@ -65,7 +65,10 @@ export default function StatsBar({ state, dispatch, onSwitchLanguage }) {
         <div className="hud-brand">Hello,<br /><span>Tycoon!</span></div>
 
         {/* The number that matters, front and centre. */}
-        <div className="hud-coins" title={`${Math.floor(state.bytes).toLocaleString()} ${CURRENCY.name}`}>
+        <div
+          className="hud-coins"
+          data-tip={`${Math.floor(state.bytes).toLocaleString()} ${CURRENCY.name} — spend them on machines and new floors`}
+        >
           <Icon name="coin" size={26} label={CURRENCY.name} />
           <div className="hud-coins-text">
             <b>{formatNumber(state.bytes)}</b>
@@ -74,7 +77,12 @@ export default function StatsBar({ state, dispatch, onSwitchLanguage }) {
         </div>
 
         {/* Level and the bar towards the next one. */}
-        <div className="hud-level" title={progress.maxed ? 'Max level' : `${progress.into} / ${progress.need} XP`}>
+        <div
+          className="hud-level"
+          data-tip={progress.maxed
+            ? 'Max level reached'
+            : `Level ${progress.level} — ${progress.into} of ${progress.need} XP to the next one. Levels come only from solving problems, and they unlock new topics.`}
+        >
           <div className="hud-level-badge">{progress.level}</div>
           <div className="hud-level-body">
             <span>LEVEL</span>
@@ -83,19 +91,19 @@ export default function StatsBar({ state, dispatch, onSwitchLanguage }) {
         </div>
 
         <div className="hud-chips">
-          <span className="hud-chip" title="Problems solved">
+          <span className="hud-chip" data-tip="Problems you have solved. New floors need a minimum number of these, so you cannot idle your way up.">
             <Icon name="check" size={16} /> {solvedCount(state)}
           </span>
-          <span className="hud-chip" title="Floors built">
+          <span className="hud-chip" data-tip="Floors in your tower">
             <Icon name="floors" size={16} /> {state.floors.length}
           </span>
           {state.streak > 0 && (
-            <span className="hud-chip is-hot" title={`${state.streak} correct in a row — rewards ×${streakMultiplier(state).toFixed(2)}`}>
+            <span className="hud-chip is-hot" data-tip={`${state.streak} correct in a row — every Byte is worth ×${streakMultiplier(state).toFixed(2)}. Only a wrong answer resets it, never a slow one.`}>
               <Icon name="spark" size={16} /> {state.streak}×
             </span>
           )}
           {state.reputation > 0 && (
-            <span className="hud-chip is-rep" title={`${PRESTIGE.name} completed: ${state.prestigeCount}`}>
+            <span className="hud-chip is-rep" data-tip={`Reputation from ${state.prestigeCount} ${PRESTIGE.name} round${state.prestigeCount === 1 ? '' : 's'} — it multiplies everything you earn, forever.`}>
               <Icon name="trophy" size={16} /> {state.reputation}
             </span>
           )}
@@ -107,23 +115,31 @@ export default function StatsBar({ state, dispatch, onSwitchLanguage }) {
           className="btn btn-small"
           onClick={() => onSwitchLanguage(otherLanguage, switchCost)}
           disabled={!alreadyUnlocked && state.bytes < switchCost}
-          title={alreadyUnlocked
-            ? `Switch to ${otherLabel}`
-            : `Unlock ${otherLabel} for ${formatNumber(switchCost)} ${CURRENCY.name}`}
+          data-tip={alreadyUnlocked
+            ? `Switch to ${otherLabel} — your Bytes, tower and level all carry over`
+            : `Unlock ${otherLabel} for ${formatNumber(switchCost)} ${CURRENCY.name}. Everything you have built carries over.`}
         >
           {alreadyUnlocked ? otherLabel : <>{otherLabel} <Icon name="coin" size={13} /> {formatNumber(switchCost)}</>}
         </button>
 
         <button
-          className="btn btn-icon"
           onClick={() => dispatch({ type: 'SET_SOUND', value: !state.settings.sound })}
-          title={state.settings.sound ? 'Sound on' : 'Sound off'}
+          className="btn btn-icon tip-left"
+          data-tip={state.settings.sound ? 'Sound is on — click to mute' : 'Sound is off — click to unmute'}
           aria-label={state.settings.sound ? 'Turn sound off' : 'Turn sound on'}
         >
           {state.settings.sound ? '♪' : '♪̸'}
         </button>
-        <button className="btn btn-icon" onClick={() => setShowAssets(true)} title="Where the art lives">🎨</button>
-        <button className="btn btn-icon" onClick={() => setConfirmReset(true)} title="Start over">↺</button>
+        <button
+          className="btn btn-icon tip-left"
+          onClick={() => setShowAssets(true)}
+          data-tip="Show every pixel-art file and what it is"
+        >🎨</button>
+        <button
+          className="btn btn-icon tip-left"
+          onClick={() => setConfirmReset(true)}
+          data-tip="Erase this save and start over"
+        >↺</button>
       </div>
 
       {showAssets && <AssetManifest onClose={() => setShowAssets(false)} />}

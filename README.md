@@ -73,10 +73,13 @@ npm run art
    (or `Ctrl+Enter`).
 3. **Pass the tests** and you earn Bytes and XP. Get it wrong and you lose
    nothing except your streak — you can try as many times as you like.
-4. **Spend Bytes** on better office furniture, and on whole new floors:
-   a server room, a gym, a break room, a rooftop lounge, and eventually the
-   executive suite.
-5. Your office earns Bytes on its own while you work on the next problem.
+4. **Spend Bytes** in the room view under your tower. Every floor arrives
+   empty, with a dashed plot and a price tag where each machine will go —
+   buy them one at a time and watch the room fill up, then upgrade each
+   machine through its tiers.
+5. **Unlock new floors**: a server room, a gym, a break room, a rooftop
+   lounge, and eventually the executive suite.
+6. Your office earns Bytes on its own while you work on the next problem.
 
 Some things are locked behind **both** Bytes *and* problems solved, so you
 can't skip the coding by leaving the game running.
@@ -89,6 +92,8 @@ can't skip the coding by leaving the game running.
 | `Tab` / `Shift+Tab` | indent / outdent (it won't jump out of the editor) |
 | **Hint** button | gives you one nudge at a time — never the answer |
 | **Reset code** | puts the starter code back if you get tangled up |
+| ▴ chevrons | fold away the problem list or the question to make the editor bigger |
+| Click a floor | opens that floor in the room view below, seen from above |
 | ♪ button | turn the sounds off |
 
 ---
@@ -104,6 +109,11 @@ offline. Java needs no download at all.
 Check the *expected* and *your output* boxes side by side. Usually it's a
 capital letter, a missing space, or a missing full stop. The tests are picky on
 purpose — real code is too.
+
+**"Why is my problem order different from my friend's?"**
+Each save shuffles the problems inside a topic, so you get your own running
+order. You still see every problem, and the topics still unlock in the same
+sequence. (Teachers can turn this off — see the guide.)
 
 **"A test is hidden."**
 Some tests check awkward cases (an empty list, the number zero, a negative

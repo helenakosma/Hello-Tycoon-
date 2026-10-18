@@ -59,6 +59,12 @@ export function spritePath(spriteKey) {
   switch (kind) {
     case 'room':
       return `${ASSET_ROOT}/rooms/${parts[1]}.png`;
+    case 'roomtop':
+      // The same room seen from above, for the room view under the tower.
+      return `${ASSET_ROOT}/rooms/${parts[1]}_top.png`;
+    case 'itemtop':
+      // item.chair.t2 seen from above -> items/chair_t2_top.png
+      return `${ASSET_ROOT}/items/${parts.slice(1).join('_')}_top.png`;
     case 'item':
       // item.chair.t2 -> items/chair_t2.png ; item.chair -> items/chair.png
       return `${ASSET_ROOT}/items/${parts.slice(1).join('_')}.png`;
@@ -136,7 +142,9 @@ export function expectedAssetFilenames(rooms, itemsByRoom) {
  * crisp sprites look correct — don't feel tied to these exact numbers.
  */
 export const SPRITE_SIZES = {
-  room: { width: 480, height: 108, note: 'Wide cutaway room interior, Tiny Tower style (a 160x36 drawing at 3x).' },
+  room: { width: 480, height: 108, note: 'Wide cutaway room interior for the tower (a 160x36 drawing at 3x).' },
+  roomTop: { width: 480, height: 216, note: 'The same room from above, for the room view (a 160x72 drawing at 3x).' },
+  itemTop: { width: 144, height: 144, note: 'A machine seen from above (a 16x16 drawing at 3x).' },
   item: { width: 48, height: 48, note: 'Single object icon, transparent background (a 16x16 drawing at 3x).' },
   ui: { width: 16, height: 16, note: 'Small UI glyph (coin, star).' },
 };

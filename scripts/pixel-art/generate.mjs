@@ -20,7 +20,9 @@ import ROOMS from '../../src/data/rooms.js';
 import ITEMS from '../../src/data/items.js';
 import { Canvas } from './canvas.mjs';
 import { drawRoom } from './rooms.mjs';
+import { drawRoomTop } from './rooms-top.mjs';
 import { drawItem } from './items.mjs';
+import { drawItemTop } from './items-top.mjs';
 import { drawUi, UI_KEYS } from './ui.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -56,8 +58,13 @@ function placeholderItem(tier) {
 for (const room of ROOMS) {
   const canvas = drawRoom(room.id);
   if (!canvas) { missing.push(`room "${room.id}" has no drawing in rooms.mjs`); continue; }
-  const file = join(assetsDir, 'rooms', `${room.id}.png`);
-  writeFileSync(file, canvas.scale(ROOM_SCALE).toPng());
+  writeFileSync(join(assetsDir, 'rooms', `${room.id}.png`), canvas.scale(ROOM_SCALE).toPng());
+  written++;
+
+  // ...and the top-down floor plan of the same room.
+  const top = drawRoomTop(room.id);
+  if (!top) { missing.push(`room "${room.id}" has no top-down drawing in rooms-top.mjs`); continue; }
+  writeFileSync(join(assetsDir, 'rooms', `${room.id}_top.png`), top.scale(ROOM_SCALE).toPng());
   written++;
 }
 
@@ -74,8 +81,16 @@ for (const [roomType, lines] of Object.entries(ITEMS)) {
         missing.push(`${roomType}/${line.id} tier ${index + 1} (key "${key}") — used a plain placeholder`);
         canvas = placeholderItem(tier);
       }
-      const file = join(assetsDir, 'items', `${base}_t${index + 1}.png`);
-      writeFileSync(file, canvas.scale(ITEM_SCALE).toPng());
+      writeFileSync(join(assetsDir, 'items', `${base}_t${index + 1}.png`), canvas.scale(ITEM_SCALE).toPng());
+      written++;
+
+      // ...and the top-down version used by the room view.
+      let top = drawItemTop(key);
+      if (!top) {
+        missing.push(`${roomType}/${line.id} tier ${index + 1} has no top-down art (key "${key}")`);
+        top = placeholderItem(tier);
+      }
+      writeFileSync(join(assetsDir, 'items', `${base}_t${index + 1}_top.png`), top.scale(ITEM_SCALE).toPng());
       written++;
     });
   }

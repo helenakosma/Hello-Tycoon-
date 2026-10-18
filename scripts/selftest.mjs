@@ -104,7 +104,7 @@ for (const [roomType, lines] of Object.entries(ITEMS)) {
     lineIds.add(line.id);
     if (!line.sprite) fail(`items.js: "${line.id}" has no sprite key`);
     if (!line.tiers?.length) fail(`items.js: "${line.id}" has no tiers`);
-    if (line.tiers?.[0]?.cost !== 0) fail(`items.js: "${line.id}" tier 1 must cost 0 (it comes with the room)`);
+    if (!(line.tiers?.[0]?.cost > 0)) fail(`items.js: "${line.id}" tier 1 must cost more than 0 — rooms start empty and every machine is bought`);
     line.tiers?.forEach((tier, i) => {
       if (!BONUS_TYPES[tier.bonus?.type]) fail(`items.js: "${line.id}" tier ${i + 1} has unknown bonus type "${tier.bonus?.type}"`);
       if (i > 0 && !(tier.cost > line.tiers[i - 1].cost)) fail(`items.js: "${line.id}" tier ${i + 1} is not more expensive than tier ${i}`);

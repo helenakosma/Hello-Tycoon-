@@ -23,7 +23,7 @@ import ProblemPanel from './components/ProblemPanel.jsx';
 import CodeEditor from './components/CodeEditor.jsx';
 import TestResults from './components/TestResults.jsx';
 import Tower from './components/Tower.jsx';
-import RoomPanel from './components/RoomPanel.jsx';
+import RoomView from './components/RoomView.jsx';
 import Toasts from './components/Toasts.jsx';
 import { playBuild, playCorrect, playIncorrect, playPurchase } from './components/sfx.js';
 
@@ -255,7 +255,7 @@ export default function App() {
             <div className="coinpop">+{formatNumber(state.lastSolve.amount)}</div>
           )}
           <Tower state={state} dispatch={dispatch} onBuild={buildFloor} />
-          <RoomPanel
+          <RoomView
             state={state}
             onBuy={buyItem}
             onPrestige={() => dispatch({ type: 'PRESTIGE' })}

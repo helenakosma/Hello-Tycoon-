@@ -17,6 +17,9 @@
  *   name              optional override of the room type's name
  *   cost              Bytes required to build
  *   requiresProblems  solved-problem count required to build
+ *   starterItems      optional list of upgrade-line ids that come free with
+ *                     the floor. Everything else starts empty and is bought
+ *                     one machine at a time.
  *
  * TEACHERS: add more floors by appending entries. Keep `level` sequential —
  * a floor can only be built once the one below it exists.
@@ -29,6 +32,9 @@ const FLOORS = [
     name: 'Coding Bullpen',
     cost: 0,
     requiresProblems: 0,
+    // Every other floor arrives empty. The very first one comes with a single
+    // machine so the game doesn't open on a bare room.
+    starterItems: ['computers'],
   },
   {
     level: 2,

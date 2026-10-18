@@ -50,8 +50,9 @@ export function levelProgress(xp) {
 
 /**
  * Add up every bonus from every item the player currently owns.
+ *
  * A floor's `items` map holds the OWNED TIER for each line, e.g. { chairs: 2 }.
- * Tier 1 is free with the room, so every line on a built floor counts at least once.
+ * Tier 0 means the machine has not been bought yet and contributes nothing.
  */
 export function totalBonuses(state) {
   const totals = { bytesPerSec: 0, passiveMult: 0, rewardMult: 0, xpMult: 0, streakBonus: 0 };
@@ -59,7 +60,8 @@ export function totalBonuses(state) {
   for (const floor of state.floors) {
     const lines = ITEMS[floor.roomType] || [];
     for (const line of lines) {
-      const owned = floor.items?.[line.id] ?? 1;
+      const owned = floor.items?.[line.id] ?? 0;
+      if (owned < 1) continue;            // not bought yet
       // Bonuses do NOT stack across tiers — the current tier replaces the last.
       const tier = line.tiers[Math.min(owned, line.tiers.length) - 1];
       if (!tier) continue;
@@ -182,12 +184,13 @@ export function roomUpgrades(state, floorIndex) {
   const lines = ITEMS[floor.roomType] || [];
 
   return lines.map((line) => {
-    const owned = floor.items?.[line.id] ?? 1;
-    const currentTier = line.tiers[owned - 1];
+    const owned = floor.items?.[line.id] ?? 0;
+    const currentTier = owned > 0 ? line.tiers[owned - 1] : null;
     const nextTier = line.tiers[owned] || null;
     return {
       line,
       owned,
+      owned0: owned === 0,                // empty plot, waiting for its machine
       maxed: !nextTier,
       currentTier,
       nextTier,

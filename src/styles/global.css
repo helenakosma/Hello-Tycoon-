@@ -72,7 +72,9 @@ button:disabled { cursor: not-allowed; }
   min-height: 0;
 }
 
-.pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; gap: var(--gap); }
+/* overflow-y:auto is the safety net: on a very short window the editor keeps
+   its minimum height and the column scrolls, instead of the editor collapsing. */
+.pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; gap: var(--gap); overflow-y: auto; }
 
 /* On a narrow screen (or a projector in portrait) stack the two halves. */
 @media (max-width: 1000px) {
@@ -191,6 +193,17 @@ button:disabled { cursor: not-allowed; }
 
 .stars { display: inline-flex; gap: 1px; align-items: center; }
 
+/* On a short screen every pixel of chrome matters. */
+@media (max-height: 820px) {
+  :root { --gap: 9px; }
+  .card-head { padding: 7px 12px; }
+  .prompt-body { padding: 10px 12px; }
+  .results-body { padding: 9px 12px; }
+  .editor-actions { padding: 8px 10px; }
+  .hud { padding: 6px 12px; gap: 8px; }
+  .hud-coins-text b { font-size: 18px; }
+}
+
 /* --- 3. HUD -------------------------------------------------------------- */
 .hud {
   display: flex;
@@ -283,10 +296,30 @@ button:disabled { cursor: not-allowed; }
 
 /* --- 4. Quest board, prompt, editor, results ----------------------------- */
 
+/* Topic tabs scroll sideways; the fold-away chevron stays pinned beside them. */
+.picker-head {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--border);
+}
+.picker-head .tier-tabs { flex: 1; min-width: 0; border-bottom: none; }
+
+.collapse-btn {
+  flex: none;
+  width: 30px;
+  align-self: stretch;
+  color: var(--muted);
+  font-size: 13px;
+  border-left: 2px solid var(--border);
+  transition: color 0.12s, background 0.12s;
+}
+.collapse-btn:hover { color: var(--text); background: var(--panel-2); }
+.card-head .collapse-btn { align-self: center; height: 26px; border-left: none; width: 24px; border-radius: 6px; }
+
 .tier-tabs {
   display: flex;
-  gap: 6px;
-  padding: 9px 10px;
+  gap: 5px;
+  padding: 6px 8px;
   overflow-x: auto;
   border-bottom: 2px solid var(--border);
   scrollbar-width: thin;
@@ -294,8 +327,8 @@ button:disabled { cursor: not-allowed; }
 .tier-tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
+  gap: 5px;
+  padding: 5px 10px;
   border-radius: 999px;
   border: 2px solid var(--border);
   border-bottom-width: 3px;
@@ -328,7 +361,9 @@ button:disabled { cursor: not-allowed; }
   flex-direction: column;
   gap: 5px;
   padding: 10px;
-  max-height: 190px;
+  /* Scales with the window instead of a fixed 190px, which on a 768px-tall
+     laptop left the editor with almost no room. */
+  max-height: clamp(90px, 14vh, 200px);
   overflow-y: auto;
 }
 
@@ -377,7 +412,8 @@ button:disabled { cursor: not-allowed; }
 }
 
 /* Prompt */
-.prompt-card { display: flex; flex-direction: column; min-height: 0; flex: 0 1 auto; max-height: 30vh; }
+.prompt-card { display: flex; flex-direction: column; min-height: 0; flex: 0 1 auto; max-height: clamp(88px, 17vh, 260px); }
+.prompt-card.is-collapsed { max-height: none; flex: none; }
 .prompt-body { padding: 14px; overflow-y: auto; flex: 1; min-height: 0; }
 .prompt-body p { margin: 0 0 10px; }
 .prompt-body ul { margin: 0 0 10px; padding-left: 20px; }
@@ -416,7 +452,9 @@ button:disabled { cursor: not-allowed; }
 .hint-box li { margin-bottom: 4px; }
 
 /* Editor */
-.editor-card { flex: 1; display: flex; flex-direction: column; min-height: 210px; }
+/* The editor is the point of the screen, so it takes every pixel the other
+   panels don't need, and never drops below a usable size. */
+.editor-card { flex: 1 1 auto; display: flex; flex-direction: column; min-height: clamp(250px, 38vh, 620px); }
 
 .editor-wrap {
   position: relative;
@@ -492,7 +530,11 @@ button:disabled { cursor: not-allowed; }
 }
 
 /* Results */
-.results-card { flex: none; max-height: 36vh; display: flex; flex-direction: column; }
+/* Before you have run anything, the results panel is a one-line prompt, not a
+   third of the screen. */
+.results-card { flex: none; max-height: clamp(120px, 26vh, 340px); display: flex; flex-direction: column; }
+.results-card.is-empty .card-head { padding: 6px 12px; }
+.results-card.is-empty .results-body { padding: 7px 12px; font-size: 13px; }
 .results-body { overflow-y: auto; padding: 12px 14px; }
 
 .verdict {
@@ -667,6 +709,9 @@ button:disabled { cursor: not-allowed; }
 }
 .floor-income {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   font-family: var(--mono);
   font-size: 10.5px;
   font-weight: 700;
@@ -745,19 +790,23 @@ button:disabled { cursor: not-allowed; }
 /* Locked "next floor" placeholder, sitting on top of the tower. */
 .floor-ghost {
   flex: none;
-  border: 3px dashed #5f7391;
+  border: 2px dashed #5f7391;
   border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 6px;
-  text-align: center;
+  padding: 7px 10px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   color: var(--muted);
-  font-size: 13.5px;
+  font-size: 12.5px;
   background: repeating-linear-gradient(
     45deg, #ffffff08, #ffffff08 6px, transparent 6px, transparent 12px
   );
 }
-.floor-ghost strong { display: block; color: var(--text); margin-bottom: 4px; font-size: 14px; }
-.floor-ghost .why { margin-top: 7px; }
+.floor-ghost strong { color: var(--text); font-size: 13px; }
+.floor-ghost .why { width: 100%; }
 
 /* The pavement the tower stands on. */
 .tower-ground {
@@ -771,24 +820,158 @@ button:disabled { cursor: not-allowed; }
 
 /* --- 6. Shop, toasts, modals, animations --------------------------------- */
 
-.shop-body { padding: 10px 14px; overflow-y: auto; max-height: 20vh; }
+/* --- The room view: the selected floor, from above ----------------------- */
 
-.upgrade-row {
+/* The tower is the overview; the room view is where you actually build, so
+   it gets the larger share of the column. */
+.tower-card { flex: 1 1 46%; }
+.roomview-card { flex: 1 1 54%; display: flex; flex-direction: column; min-height: 210px; }
+
+.roomview-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  /* Matches the 160x72 top-down room art so the floor is never squashed. */
+  aspect-ratio: 160 / 72;
+  margin: 10px 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 2px #00000055, 0 2px 0 #0005;
+}
+
+.sprite.roomview-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 0;
+  pointer-events: none;
+}
+.sprite.roomview-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;              /* the stage's aspect-ratio matches the art */
+  image-rendering: pixelated;
+}
+
+/* The plots sit inside the room's walls. */
+.plots {
+  position: absolute;
+  inset: 9% 7% 7% 7%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 0;
-  border-top: 1px solid var(--border);
+  justify-content: space-around;
+  gap: 2%;
 }
-.upgrade-row:first-of-type { border-top: none; }
-.upgrade-info { flex: 1; min-width: 0; }
-.upgrade-name { font-size: 14px; font-weight: 600; }
-.upgrade-next { font-size: 12px; color: var(--muted); }
-.upgrade-next b { color: var(--green); font-weight: 700; }
-.upgrade-maxed { font-size: 12px; color: var(--gold); font-weight: 600; }
 
-/* The shop's sprite previews are bigger than the generic 26px box. */
-.shop-body .sprite { width: 34px; height: 34px; background: none !important; }
+.plot-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* One spot on the floor. Empty plots are dashed and gold, so an unfinished
+   room reads at a glance as "there is more to buy here". */
+.plot {
+  position: relative;
+  width: clamp(38px, 7vw, 76px);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  border: 2px solid #ffffff1f;
+  background: #00000030;
+  transition: transform 0.12s, border-color 0.12s, background 0.12s;
+}
+.plot.is-empty {
+  border: 2px dashed var(--gold-deep);
+  background: #f5c5420f;
+}
+.plot.is-max { border-color: #f5c54266; }
+.plot.can-buy:hover { transform: translateY(-3px); border-color: var(--gold); background: #f5c5421f; }
+.plot:disabled { cursor: default; }
+
+.plot-plus { font-size: 22px; font-weight: 900; color: var(--gold); opacity: 0.8; line-height: 1; }
+
+.sprite.plot-sprite {
+  width: 82%;
+  height: 82%;
+  border-radius: 0;
+  background: none !important;
+  filter: drop-shadow(0 2px 3px #00000077);
+}
+
+/* Little dots showing how far through an upgrade line this machine is. */
+.plot-pips {
+  position: absolute;
+  bottom: 3px;
+  display: flex;
+  gap: 2px;
+}
+.plot-pips i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff33;
+}
+.plot-pips i.on { background: var(--gold); }
+
+.plot-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  max-width: 13ch;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000000cc;
+}
+
+/* The price tag under a plot — the thing you actually click. */
+.plot-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  background: #0b0f1acc;
+  color: var(--dim);
+  font-size: 11.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition: filter 0.12s, transform 0.08s;
+}
+.plot-tag.can-buy {
+  background: linear-gradient(#f5d06a, #e0a91f);
+  border-color: #ffe9a8;
+  color: #3a2a00;
+}
+.plot-tag.can-buy:hover { filter: brightness(1.08); }
+.plot-tag.can-buy:active { transform: translateY(1px); }
+.plot-tag.is-max {
+  border-color: #f5c54255;
+  color: var(--gold);
+  background: none;
+  padding: 3px 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+}
+
+.prestige-bar { padding: 0 12px 11px; }
+
+/* On a short screen the stage would eat the whole column, so cap it. */
+@media (max-height: 820px) {
+  .roomview-card { min-height: 180px; }
+  .roomview-stage { margin: 7px 10px; }
+  .plot-label { display: none; }
+}
 
 /* Toasts */
 .toasts {
@@ -914,6 +1097,50 @@ button:disabled { cursor: not-allowed; }
 .modal td, .modal th { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); }
 .modal th { color: var(--dim); font-weight: 600; }
 .modal td.mono { font-family: var(--mono); color: var(--gold); }
+
+/* --- Hover tooltips ------------------------------------------------------
+   Any element with data-tip="..." gets one. Pure CSS, so there is no delay
+   and nothing to wire up: just add the attribute. */
+[data-tip] { position: relative; }
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-3px);
+  z-index: 80;
+  width: max-content;
+  max-width: 230px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: #060a12;
+  border: 2px solid var(--border-bright);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  box-shadow: 0 6px 18px #000a;
+}
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+/* Near the right-hand edge, pin the tip inside the window instead. */
+[data-tip].tip-left::after { left: auto; right: 0; transform: translateX(0) translateY(-3px); }
+[data-tip].tip-left:hover::after,
+[data-tip].tip-left:focus-visible::after { transform: translateX(0) translateY(0); }
+
+/* The HUD must not clip its own tooltips. */
+.hud, .picker-head, .card-head { overflow: visible; }
 
 /* --- Animations ---------------------------------------------------------- */
 @keyframes floor-rise {

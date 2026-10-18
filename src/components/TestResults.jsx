@@ -27,7 +27,7 @@ export default function TestResults({ result, language, running }) {
 
   if (!result) {
     return (
-      <div className="card results-card">
+      <div className="card results-card is-empty">
         <div className="card-head"><span className="card-title">Tests</span></div>
         <div className="results-body muted">
           Write your solution, then press <b>Run Tests</b> (or Ctrl+Enter).

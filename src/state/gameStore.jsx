@@ -25,10 +25,19 @@ import {
 // Initial state
 // ---------------------------------------------------------------------------
 
-/** Build a floor object from a floors.js definition, furnished at tier 1. */
+/**
+ * Build a floor from a floors.js definition.
+ *
+ * Floors arrive EMPTY — every upgrade line starts at tier 0, meaning "not
+ * bought yet" — so you fill the room one machine at a time. A floor may name
+ * `starterItems` to come with a machine already installed; only floor 1 does.
+ */
 function makeFloor(def) {
   const items = {};
-  for (const line of ITEMS[def.roomType] || []) items[line.id] = 1;
+  const starters = def.starterItems || [];
+  for (const line of ITEMS[def.roomType] || []) {
+    items[line.id] = starters.includes(line.id) ? 1 : 0;
+  }
   return {
     level: def.level,
     roomType: def.roomType,
@@ -207,7 +216,7 @@ export function reducer(state, action) {
       const line = (ITEMS[floor.roomType] || []).find((l) => l.id === lineId);
       if (!line) return state;
 
-      const owned = floor.items?.[lineId] ?? 1;
+      const owned = floor.items?.[lineId] ?? 0;
       const nextTier = line.tiers[owned];
       if (!nextTier || state.bytes < nextTier.cost) return state;
 
@@ -222,7 +231,9 @@ export function reducer(state, action) {
         toasts: [...state.toasts, {
           id: ++toastId,
           tone: 'success',
-          text: `${line.name} upgraded to ${nextTier.name}`,
+          text: owned === 0
+            ? `${nextTier.name} installed`
+            : `${line.name} upgraded to ${nextTier.name}`,
         }],
       };
     }
