@@ -6,7 +6,7 @@
  * Keeping the maths here means the reducer stays short and the UI stays dumb.
  */
 
-import { ECONOMY, PROGRESSION, PRESTIGE } from '../data/config.js';
+import { ECONOMY, PROGRESSION, PRESTIGE, SHUFFLE_PROBLEMS } from '../data/config.js';
 import TIERS, { tiersById } from '../data/tiers.js';
 import FLOORS from '../data/floors.js';
 import ITEMS, { itemLinesById } from '../data/items.js';
@@ -251,3 +251,66 @@ export function roomForFloor(floor) {
 }
 
 export { itemLinesById };
+
+// ---------------------------------------------------------------------------
+// Problem ordering
+// ---------------------------------------------------------------------------
+
+/**
+ * A tiny deterministic hash, so the same (seed, topic) always shuffles the
+ * same way. Without this the list would reshuffle on every render.
+ */
+function hashString(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/** Seeded pseudo-random generator (mulberry32). */
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Fisher-Yates using a seeded generator. Returns a new array. */
+function seededShuffle(items, seed) {
+  const out = [...items];
+  const random = rng(seed);
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/**
+ * The problems of one topic, in this save's own order.
+ *
+ * Shuffled per save so two students don't get an identical sequence, but
+ * never across topics — the topic ladder is the teaching order and stays put.
+ * Set `seed` to 0 (or remove it from the save) to get the authored order back.
+ *
+ * TEACHERS: if you want everyone on the same problem at the same time, set
+ * SHUFFLE_PROBLEMS to false in src/data/config.js.
+ */
+export function problemsForTier(state, problems, tierId) {
+  const inTier = problems.filter((p) => p.tier === tierId);
+  if (!SHUFFLE_PROBLEMS || !state.seed) return inTier;
+  return seededShuffle(inTier, hashString(`${state.seed}:${tierId}`));
+}
+
+/**
+ * Every problem the player can currently open, in play order: topics in the
+ * ladder's order, problems shuffled within each topic.
+ */
+export function orderedProblems(state, problems) {
+  return TIERS.flatMap((tier) => problemsForTier(state, problems, tier.id));
+}

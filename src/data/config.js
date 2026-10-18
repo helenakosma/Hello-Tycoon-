@@ -123,6 +123,18 @@ export const BONUS_TYPES = {
   },
 };
 
+/**
+ * Shuffle the problems inside each topic, differently for each save file.
+ *
+ * The topic ladder itself never shuffles — only the order of the problems
+ * within a topic — so the teaching sequence is unchanged and every problem is
+ * still seen exactly once.
+ *
+ * Set this to false if you want the whole class on the same problem at the
+ * same time ("everyone do problem 3").
+ */
+export const SHUFFLE_PROBLEMS = true;
+
 /** Feature switches, handy for classroom demos. */
 export const FEATURES = {
   /** Play a short "cha-ching" on a correct answer (uses the Web Audio API). */

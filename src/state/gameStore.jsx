@@ -68,7 +68,20 @@ export function createInitialState() {
     currentProblemId: null,
     drafts: {},                 // problemId -> the student's code
     selectedFloor: 0,
-    settings: { sound: FEATURES.soundEnabled },
+    settings: {
+      sound: FEATURES.soundEnabled,
+      // Panels a student has folded away to give the editor more room.
+      hideProblemList: false,
+      hidePrompt: false,
+    },
+
+    /**
+     * A per-save random seed. Used to shuffle the problems inside each topic
+     * so two students side by side don't get the same running order, while
+     * the topic ladder and difficulty ramp stay exactly as the teacher wrote
+     * them. Fixed per save, so your own order never changes under you.
+     */
+    seed: Math.floor(Math.random() * 1e9),
     lastSeenAt: Date.now(),
 
     // --- transient (never saved) ----------------------------------------
@@ -300,6 +313,10 @@ export function reducer(state, action) {
     // -----------------------------------------------------------------
     case 'SET_SOUND':
       return { ...state, settings: { ...state.settings, sound: action.value } };
+
+    /** Generic settings toggle, e.g. folding away a panel. */
+    case 'SET_SETTING':
+      return { ...state, settings: { ...state.settings, [action.key]: action.value } };
 
     case 'DISMISS_TOAST':
       return { ...state, toasts: state.toasts.filter((t) => t.id !== action.id) };
