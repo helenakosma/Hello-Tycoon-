@@ -11,7 +11,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useGame } from './state/gameStore.jsx';
 import { gradeSubmission } from './engine/grader.js';
 import { loadPython } from './engine/python/pyodideRunner.js';
-import { tierStatus, formatNumber } from './state/selectors.js';
+import { tierStatus, formatNumber, orderedProblems } from './state/selectors.js';
 
 import javaProblems from './data/problems/java.js';
 import pythonProblems from './data/problems/python.js';
@@ -45,11 +45,12 @@ export default function App() {
     if (chosen) return chosen;
     // Default to the first unsolved problem in an unlocked tier.
     const unlocked = new Set(tierStatus(state).filter((s) => s.unlocked).map((s) => s.tier.id));
-    return problems.find((p) => unlocked.has(p.tier) && !state.solvedProblemIds.includes(p.id))
-      || problems.find((p) => unlocked.has(p.tier))
+    const inPlayOrder = orderedProblems(state, problems);
+    return inPlayOrder.find((p) => unlocked.has(p.tier) && !state.solvedProblemIds.includes(p.id))
+      || inPlayOrder.find((p) => unlocked.has(p.tier))
       || problems[0]
       || null;
-  }, [problems, state.currentProblemId, state.solvedProblemIds, state.xp]);
+  }, [problems, state.currentProblemId, state.solvedProblemIds, state.xp, state.seed]);
 
   const source = problem
     ? (state.drafts[problem.id] ?? problem.starterCode)
@@ -59,10 +60,10 @@ export default function App() {
   const nextProblem = useMemo(() => {
     if (!problem) return null;
     const unlocked = new Set(tierStatus(state).filter((s) => s.unlocked).map((s) => s.tier.id));
-    return problems.find(
+    return orderedProblems(state, problems).find(
       (p) => p.id !== problem.id && unlocked.has(p.tier) && !state.solvedProblemIds.includes(p.id),
     ) || null;
-  }, [problems, problem, state.solvedProblemIds, state.xp]);
+  }, [problems, problem, state.solvedProblemIds, state.xp, state.seed]);
 
   const goToNextProblem = () => {
     if (nextProblem) dispatch({ type: 'SELECT_PROBLEM', problemId: nextProblem.id });
