@@ -24,6 +24,7 @@ import { drawRoomTop } from './rooms-top.mjs';
 import { drawItem } from './items.mjs';
 import { drawItemTop } from './items-top.mjs';
 import { drawUi, UI_KEYS } from './ui.mjs';
+import { drawStructure, STRUCTURE_KEYS } from './structure.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const assetsDir = join(here, '..', '..', 'public', 'assets');
@@ -100,6 +101,13 @@ for (const [roomType, lines] of Object.entries(ITEMS)) {
 
 for (const key of UI_KEYS) {
   writeFileSync(join(assetsDir, 'ui', `${key}.png`), drawUi(key).scale(UI_SCALE).toPng());
+  written++;
+}
+
+// --- building parts: roof, lobby, the city behind it -----------------------
+
+for (const key of STRUCTURE_KEYS) {
+  writeFileSync(join(assetsDir, 'ui', `${key}.png`), drawStructure(key).scale(3).toPng());
   written++;
 }
 

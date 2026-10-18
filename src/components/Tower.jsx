@@ -17,6 +17,7 @@ import Sprite from './Sprite.jsx';
 import Icon from './Icon.jsx';
 import ITEMS from '../data/items.js';
 import { roomsById } from '../data/rooms.js';
+import { spritePath } from '../data/assets.js';
 import {
   formatNumber, floorBuildStatus, reputationMultiplier, totalBonuses,
 } from '../state/selectors.js';
@@ -85,7 +86,7 @@ function Floor({ floor, index, isSelected, onSelect, state }) {
   return (
     <div
       className={`floor${isSelected ? ' is-selected' : ''}`}
-      style={{ borderColor: room.placeholder.accent, background: room.placeholder.bg }}
+      style={{ background: room.placeholder.bg }}
       onClick={() => onSelect(index)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(index); } }}
       role="button"
@@ -127,9 +128,39 @@ export default function Tower({ state, dispatch, onBuild }) {
   const scrollRef = useRef(null);
   const floorCount = state.floors.length;
 
-  // When a new floor appears, scroll up to show it off.
+  /**
+   * Where to park the tower's scroll.
+   *
+   * On arrival, the bottom — you want to see your building standing on the
+   * street, not a roof floating in the dark. After that, every new floor
+   * scrolls to the top so you get to admire the thing you just built.
+   */
+  const previousFloorCount = useRef(null);
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    const el = scrollRef.current;
+    if (!el) return;
+
+    // Only treat it as "a floor was added" if the count actually went UP.
+    // Checking for a previous value instead would misfire under React's
+    // StrictMode, which mounts effects twice while the ref keeps its value.
+    const previous = previousFloorCount.current;
+    previousFloorCount.current = floorCount;
+    if (previous !== null && floorCount > previous) {
+      el.scrollTop = 0;                 // a new floor: show it off
+      return;
+    }
+
+    // First paint. The room and lobby art hasn't loaded yet, so the scroll
+    // height is still too small to scroll by — repeat the pin for a moment
+    // until the images settle, then stop.
+    const pinToGround = () => { el.scrollTop = el.scrollHeight; };
+    pinToGround();
+    const frame = requestAnimationFrame(pinToGround);
+    const timers = [60, 200, 500].map((ms) => setTimeout(pinToGround, ms));
+    return () => {
+      cancelAnimationFrame(frame);
+      timers.forEach(clearTimeout);
+    };
   }, [floorCount]);
 
   return (
@@ -142,45 +173,64 @@ export default function Tower({ state, dispatch, onBuild }) {
       </div>
 
       <div className="tower-scroll" ref={scrollRef}>
-        {/* The roof cap and sign, so the tower has a top rather than just stopping. */}
-        <div className="roof" aria-hidden="true">
-          <div className="roof-sign">BITWISE INC</div>
-          <div className="roof-slab" />
+        {/* Everything inside .building shares one facade, so the floors read
+            as storeys of a single structure rather than a stack of pictures. */}
+        <div className="building">
+          <div className="roof-sign" aria-hidden="true">BITWISE INC</div>
+          <Sprite
+            spriteKey="ui.rooftop"
+            placeholder={{ color: '#3a4657' }}
+            label="Rooftop"
+            className="building-roof"
+          />
+
+          {/* The next floor, shown as a construction deck so the goal is visible. */}
+          {build.def && (
+            <div className="floor-ghost">
+              <strong>Next: {build.def.name || roomsById[build.def.roomType].name}</strong>
+              <span style={{ color: 'var(--gold)', fontWeight: 700 }}>
+                <Icon name="coin" size={13} /> {formatNumber(build.def.cost)}
+              </span>
+              <span className="dim"> · <Icon name="check" size={12} /> {build.def.requiresProblems}</span>
+              <div className="why">
+                {build.canBuild
+                  ? <button className="btn btn-primary" onClick={onBuild}>Build it</button>
+                  : build.reason}
+              </div>
+            </div>
+          )}
+
+          {/* Highest floor first in the DOM; the column is bottom-anchored. */}
+          {[...state.floors].reverse().map((floor) => {
+            const index = state.floors.indexOf(floor);
+            return (
+              <Floor
+                key={floor.level}
+                floor={floor}
+                index={index}
+                isSelected={state.selectedFloor === index}
+                onSelect={(i) => dispatch({ type: 'SELECT_FLOOR', index: i })}
+                state={state}
+              />
+            );
+          })}
+
+          {/* The ground floor: pavement, the entrance, and the lit lobby. */}
+          <Sprite
+            spriteKey="ui.lobby"
+            placeholder={{ color: '#2a3346' }}
+            label="Lobby"
+            className="building-lobby"
+          />
         </div>
 
-        {/* The next floor, shown as a dashed outline so the goal is visible. */}
-        {build.def && (
-          <div className="floor-ghost">
-            <strong>Next: {build.def.name || roomsById[build.def.roomType].name}</strong>
-            <span style={{ color: 'var(--gold)', fontWeight: 700 }}>
-              <Icon name="coin" size={13} /> {formatNumber(build.def.cost)}
-            </span>
-            <span className="dim"> · <Icon name="check" size={12} /> {build.def.requiresProblems}</span>
-            <div className="why">
-              {build.canBuild
-                ? <button className="btn btn-primary" onClick={onBuild}>Build it</button>
-                : build.reason}
-            </div>
-          </div>
-        )}
-
-        {/* Highest floor first in the DOM; the column is bottom-anchored. */}
-        {[...state.floors].reverse().map((floor) => {
-          const index = state.floors.indexOf(floor);
-          return (
-            <Floor
-              key={floor.level}
-              floor={floor}
-              index={index}
-              isSelected={state.selectedFloor === index}
-              onSelect={(i) => dispatch({ type: 'SELECT_FLOOR', index: i })}
-              state={state}
-            />
-          );
-        })}
-
-        {/* The pavement the tower stands on. */}
-        <div className="tower-ground" aria-hidden="true" />
+        {/* The city behind, tucked up behind the building's base so it shows
+            either side of the tower. */}
+        <div
+          className="city-strip"
+          aria-hidden="true"
+          style={{ backgroundImage: `url(${spritePath('ui.skyline')})` }}
+        />
       </div>
     </div>
   );

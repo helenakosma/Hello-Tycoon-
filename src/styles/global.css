@@ -597,28 +597,54 @@ button:disabled { cursor: not-allowed; }
   font-size: 13px;
 }
 
-/* --- 5. Tower side (THE PIXEL ART LIVES HERE) ---------------------------- */
+/* --- 5. The tower (THE PIXEL ART LIVES HERE) ----------------------------- */
 
-.tower-card { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.tower-card { flex: 1 1 46%; display: flex; flex-direction: column; min-height: 0; }
 
 .tower-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 14px 16px 18px;
+  padding: 14px 0 0;
   /* Floors render top-down in the DOM (highest first). margin-top:auto on the
-     roof pushes a short tower to the ground; justify-content:flex-end would
-     make the top of a tall tower unscrollable. */
+     roof sign pushes a short tower down to the ground; justify-content:flex-end
+     would make the top of a tall tower unscrollable. */
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 0;                      /* floors stack flush, like real storeys */
+  gap: 0;
+  /* Night sky: a moon, a scatter of stars, and a glow near the horizon.
+     Backgrounds don't scroll with overflowing content, so this stays put
+     behind the tower as you scroll it — a cheap parallax. */
   background:
-    radial-gradient(120% 60% at 50% 100%, #1a2740 0%, transparent 70%),
-    linear-gradient(#080d16, #101a2b);
+    radial-gradient(circle at 87% 9%, #fdf6d8 0 9px, #fdf6d84d 9px 13px, #fdf6d81a 13px 22px, transparent 22px),
+    radial-gradient(1.5px 1.5px at 12% 8%, #ffffff, transparent),
+    radial-gradient(1.5px 1.5px at 31% 19%, #cfe0ff, transparent),
+    radial-gradient(1.5px 1.5px at 58% 6%, #ffffff, transparent),
+    radial-gradient(1.5px 1.5px at 69% 27%, #ffffffcc, transparent),
+    radial-gradient(1.5px 1.5px at 46% 31%, #ffffffaa, transparent),
+    radial-gradient(1.5px 1.5px at 21% 41%, #ffffff99, transparent),
+    radial-gradient(1.5px 1.5px at 8% 26%, #cfe0ffcc, transparent),
+    radial-gradient(1.5px 1.5px at 93% 34%, #ffffffaa, transparent),
+    radial-gradient(1.5px 1.5px at 38% 13%, #ffffff88, transparent),
+    radial-gradient(1.5px 1.5px at 77% 48%, #cfe0ff88, transparent),
+    radial-gradient(1.5px 1.5px at 16% 57%, #ffffff77, transparent),
+    radial-gradient(1.5px 1.5px at 63% 62%, #ffffff66, transparent),
+    linear-gradient(#060a12 0%, #0b1322 45%, #16233c 78%, #24344f 100%);
 }
 
-/* The roof cap and the company sign on top of the tower. */
-.roof { flex: none; margin-top: auto; margin-bottom: 2px; }
+/* ----- the building itself ---------------------------------------------- */
+
+/* One shared structure. Capping the width stops the rooms being stretched
+   into letterboxes on a wide screen, and leaves sky either side. */
+.building {
+  width: 100%;
+  max-width: 560px;
+  margin: auto auto 0;          /* auto on top = a short tower sits on the ground */
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 6px 14px #0009);
+}
+
 .roof-sign {
   text-align: center;
   font-family: var(--mono);
@@ -626,35 +652,60 @@ button:disabled { cursor: not-allowed; }
   font-weight: 700;
   letter-spacing: 0.22em;
   color: var(--gold);
-  text-shadow: 0 0 10px #f5c54266;
-  padding-bottom: 5px;
-}
-.roof-slab {
-  height: 11px;
-  border-radius: 5px 5px 0 0;
-  background: linear-gradient(#4a5568, #2f3846);
-  border: 2px solid #1b2230;
-  border-bottom: none;
-  box-shadow: 0 -2px 10px #00000055;
+  text-shadow: 0 0 10px #f5c54288;
+  padding-bottom: 4px;
 }
 
-/* A floor: a real room, drawn as pixel art, with furniture standing in it. */
+/* Roof and lobby span the full width of the building, facade included. */
+.sprite.building-roof,
+.sprite.building-lobby {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+  background: none !important;
+}
+.sprite.building-roof img,
+.sprite.building-lobby img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+/* A floor: a room, seen in cutaway, between two slabs of the facade. */
 .floor {
   position: relative;
   flex: none;
-  /* Matches the room art's shape, so it scales without being squashed. */
+  /* Matches the room art's shape, so the interior is never squashed. */
   aspect-ratio: 160 / 36;
-  min-height: 64px;
-  border: 2px solid;
-  border-bottom-width: 0;
+  min-height: 58px;
+  /* The exterior wall, carried down every storey. */
+  border-left: 7px solid #414b5c;
+  border-right: 7px solid #414b5c;
   cursor: pointer;
   overflow: hidden;
-  transition: filter 0.15s, box-shadow 0.15s;
+  transition: filter 0.15s;
   animation: floor-rise 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
-.floor:last-of-type { border-bottom-width: 2px; }
 .floor:hover { filter: brightness(1.12); }
-.floor.is-selected { box-shadow: inset 0 0 0 3px var(--gold); z-index: 2; }
+
+/* The concrete slab each storey sits on — the single detail that makes a
+   stack of rooms read as a building. */
+.floor::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  background: linear-gradient(#5b6779, #333c4b);
+  border-top: 1px solid #76859c;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.floor.is-selected { box-shadow: inset 0 0 0 3px var(--gold); z-index: 3; }
 
 /* The room interior artwork, filling the floor exactly.
    Written as .sprite.floor-bg so it beats the generic .sprite size below. */
@@ -670,7 +721,7 @@ button:disabled { cursor: not-allowed; }
 .sprite.floor-bg img {
   width: 100%;
   height: 100%;
-  object-fit: fill;            /* the floor's aspect-ratio matches the art */
+  object-fit: fill;              /* the floor's aspect-ratio matches the art */
   image-rendering: pixelated;
 }
 
@@ -727,7 +778,7 @@ button:disabled { cursor: not-allowed; }
   position: absolute;
   left: 11%;
   right: 11%;
-  bottom: 2%;
+  bottom: 7%;
   /* A definite height here is what lets the sprites below size themselves as
      a percentage — without it the chain is all `auto` and they collapse.
      Furniture reads better a little larger than true scale, so 52% rather
@@ -751,8 +802,7 @@ button:disabled { cursor: not-allowed; }
 }
 .item-slot:hover { transform: translateY(-3px); }
 
-/* One furniture sprite, sized to the room rather than to the screen, so the
-   furniture stays in proportion with the art at any tower width. */
+/* One furniture sprite, sized to the room rather than to the screen. */
 .sprite.item-sprite {
   height: 100%;
   width: auto;
@@ -784,16 +834,17 @@ button:disabled { cursor: not-allowed; }
   width: 100%;
   height: 100%;
   object-fit: contain;
-  image-rendering: pixelated;   /* keeps pixel art crisp when scaled */
+  image-rendering: pixelated;
 }
 
-/* Locked "next floor" placeholder, sitting on top of the tower. */
+/* The storey under construction, sitting on top of the finished tower. */
 .floor-ghost {
   flex: none;
-  border: 2px dashed #5f7391;
-  border-radius: 8px;
-  padding: 7px 10px;
-  margin-bottom: 5px;
+  position: relative;
+  border-left: 7px solid #414b5c;
+  border-right: 7px solid #414b5c;
+  border-top: 3px solid #6b7688;
+  padding: 7px 10px 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -801,24 +852,26 @@ button:disabled { cursor: not-allowed; }
   gap: 4px 8px;
   color: var(--muted);
   font-size: 12.5px;
-  background: repeating-linear-gradient(
-    45deg, #ffffff08, #ffffff08 6px, transparent 6px, transparent 12px
-  );
+  /* Hazard tape, so an unbuilt floor looks like a site rather than a hole. */
+  background:
+    repeating-linear-gradient(45deg, #f5c5420e, #f5c5420e 8px, #0000 8px, #0000 16px),
+    #121a28;
 }
 .floor-ghost strong { color: var(--text); font-size: 13px; }
-.floor-ghost .why { width: 100%; }
+.floor-ghost .why { width: 100%; text-align: center; margin-top: 2px; }
 
-/* The pavement the tower stands on. */
-.tower-ground {
+/* The city behind the tower, tucked up so it shows either side of it. */
+.city-strip {
   flex: none;
-  height: 13px;
-  border-radius: 0 0 6px 6px;
-  background: linear-gradient(#2a3346, #161d29);
-  border: 2px solid #1b2230;
-  border-top: none;
+  height: 112px;
+  margin-top: -96px;
+  z-index: 1;
+  background-repeat: repeat-x;
+  background-position: bottom center;
+  background-size: auto 112px;
+  image-rendering: pixelated;
+  opacity: 0.85;
 }
-
-/* --- 6. Shop, toasts, modals, animations --------------------------------- */
 
 /* --- The room view: the selected floor, from above ----------------------- */
 
