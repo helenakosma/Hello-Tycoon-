@@ -242,6 +242,9 @@ The filenames follow one rule:
 | `item.chair.t2` | `public/assets/items/chair_t2.png` |
 | `itemtop.chair.t2` | `public/assets/items/chair_t2_top.png` |
 | `ui.coin` | `public/assets/ui/coin.png` |
+| `ui.rooftop` | `public/assets/ui/rooftop.png` |
+| `ui.lobby` | `public/assets/ui/lobby.png` |
+| `ui.skyline` | `public/assets/ui/skyline.png` |
 
 Sizes, if you're drawing from scratch:
 
@@ -252,6 +255,9 @@ Sizes, if you're drawing from scratch:
 | Furniture (side) | 48 × 48 | Transparent background, object sitting on the bottom edge. |
 | Furniture (top-down) | 48 × 48 | The same machine seen from above, for its plot in the room view. |
 | UI icon | 24 × 24 | Transparent background. |
+| Rooftop | 480 × 90 | The roof on top of the tower: parapet, water tower, aerial. Stretches to the building's width. |
+| Lobby | 480 × 102 | The ground floor: frontage, entrance, pavement. |
+| Skyline | 480 × 168 | The city behind the tower. Drawn to **tile horizontally**, so keep the left and right edges clear of buildings. |
 
 Every room and machine therefore has **two** sprites — one for the tower and
 one for the room view:
@@ -280,8 +286,13 @@ hand-editing sprites, stop running it, or keep your edits somewhere else first.
 If you'd rather extend the generated art than replace it, the files in
 `scripts/pixel-art/` are small lists of drawing commands (`rect`, `frame`,
 `px`) with one function per sprite: `rooms.mjs` and `items.mjs` for the tower,
-`rooms-top.mjs` and `items-top.mjs` for the room view, and `ui.mjs` for the
-HUD icons.
+`rooms-top.mjs` and `items-top.mjs` for the room view, `ui.mjs` for the HUD
+icons, and `structure.mjs` for the roof, lobby and skyline.
+
+The tower's shell — the concrete facade down each side, the slab between
+storeys, the night sky and the moon — is CSS, not art, in section 5 of
+`src/styles/global.css`. The building is capped at 560px wide so the rooms are
+never stretched into letterboxes on a big screen.
 
 ## 7. How the code runs students' code
 
