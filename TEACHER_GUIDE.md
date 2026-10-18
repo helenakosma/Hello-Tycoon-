@@ -165,10 +165,11 @@ Levels come only from solving problems, so a student who hoards Bytes still
 faces harder content, and a student who idles still can't build upward. If you
 want a pure sandbox, set the `requiresProblems` values to 0.
 
-**Problem order** is shuffled per save, within each topic only. Two students
-sitting together get different running orders, but the topic ladder and the
-difficulty ramp between topics are untouched and every problem is still seen
-exactly once. The shuffle is seeded from a number stored in the save, so a
+**Problem order** is shuffled per save, within each topic only, and then
+sorted back by difficulty — so the randomness only ever reorders problems that
+are equally hard. Two students sitting together get different running orders,
+but the easy problems still come first and nobody's first ever problem is a
+four-star one. Every problem is still seen exactly once. The shuffle is seeded from a number stored in the save, so a
 student's own order never changes under them. Set `SHUFFLE_PROBLEMS` to
 `false` in `config.js` if you want everyone on the same problem at once.
 

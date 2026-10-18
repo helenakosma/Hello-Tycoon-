@@ -112,8 +112,9 @@ purpose — real code is too.
 
 **"Why is my problem order different from my friend's?"**
 Each save shuffles the problems inside a topic, so you get your own running
-order. You still see every problem, and the topics still unlock in the same
-sequence. (Teachers can turn this off — see the guide.)
+order. The easy ones still come first — the shuffle only mixes up problems of
+the same difficulty — and you still see every problem. (Teachers can turn this
+off: see the guide.)
 
 **"A test is hidden."**
 Some tests check awkward cases (an empty list, the number zero, a negative

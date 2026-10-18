@@ -297,9 +297,14 @@ function seededShuffle(items, seed) {
 /**
  * The problems of one topic, in this save's own order.
  *
- * Shuffled per save so two students don't get an identical sequence, but
- * never across topics — the topic ladder is the teaching order and stays put.
- * Set `seed` to 0 (or remove it from the save) to get the authored order back.
+ * Shuffled per save so two students don't get an identical sequence — but the
+ * shuffle is then sorted back by difficulty, so the easy problems still come
+ * first and a beginner's very first problem is never a four-star one. The
+ * randomness lives *within* each difficulty band, which is where it is useful
+ * and harmless.
+ *
+ * Topics are never shuffled against each other: the topic ladder is the
+ * teaching order and stays exactly as written.
  *
  * TEACHERS: if you want everyone on the same problem at the same time, set
  * SHUFFLE_PROBLEMS to false in src/data/config.js.
@@ -307,7 +312,9 @@ function seededShuffle(items, seed) {
 export function problemsForTier(state, problems, tierId) {
   const inTier = problems.filter((p) => p.tier === tierId);
   if (!SHUFFLE_PROBLEMS || !state.seed) return inTier;
-  return seededShuffle(inTier, hashString(`${state.seed}:${tierId}`));
+  // Array.sort is stable, so equal difficulties keep their shuffled order.
+  return seededShuffle(inTier, hashString(`${state.seed}:${tierId}`))
+    .sort((a, b) => a.difficulty - b.difficulty);
 }
 
 /**
